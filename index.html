@@ -20,6 +20,7 @@
   --gold: #c99400;
   --gold-ink: #7a5900;
   --focus: #1f6feb;
+  --err: #b3261e;
   --display: "Barlow Condensed", "Arial Narrow", "Roboto Condensed", sans-serif;
   --body: "Atkinson Hyperlegible", "Segoe UI", Arial, sans-serif;
   color-scheme: light;
@@ -27,12 +28,12 @@
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     --bg: #12161b; --panel: #1a2027; --ink: #e8ebee; --muted: #9aa4af; --rule: #2c343d;
-    --steel: #9db4cc; --gold: #e2b23a; --gold-ink: #f0c95c; --focus: #6aa6ff; color-scheme: dark;
+    --steel: #9db4cc; --gold: #e2b23a; --gold-ink: #f0c95c; --focus: #6aa6ff; --err: #ff8a80; color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
   --bg: #12161b; --panel: #1a2027; --ink: #e8ebee; --muted: #9aa4af; --rule: #2c343d;
-  --steel: #9db4cc; --gold: #e2b23a; --gold-ink: #f0c95c; --focus: #6aa6ff; color-scheme: dark;
+  --steel: #9db4cc; --gold: #e2b23a; --gold-ink: #f0c95c; --focus: #6aa6ff; --err: #ff8a80; color-scheme: dark;
 }
 * { box-sizing: border-box; }
 html, body { height: 100%; margin: 0; }
@@ -108,6 +109,23 @@ select:focus-visible, button:focus-visible, input:focus-visible, .row:focus-visi
 .pop tr.hi td { font-weight: 700; }
 .pop .grp td { color: #5b6470; font-size: 11px; text-transform: uppercase; letter-spacing: .06em; padding-top: 8px; border-bottom: 0; }
 
+/* live open-data layers */
+.ovl { display: flex; flex-direction: column; border-top: 1px solid var(--rule); }
+.ovl > div { padding: 8px 0 9px; border-bottom: 1px solid var(--rule); }
+.ovl label.t { display: grid; grid-template-columns: 16px 1fr; gap: 8px; align-items: start; cursor: pointer; font-size: 14px; }
+.ovl label.t input { width: 16px; height: 16px; margin: 2px 0 0; accent-color: var(--steel); }
+.ovl label.t small { display: block; color: var(--muted); font-size: 12px; line-height: 1.3; }
+.ovl .opts { display: flex; gap: 6px; flex-wrap: wrap; margin: 7px 0 0 24px; }
+.ovl .opts select { width: auto; flex: 1 1 130px; font-size: 13.5px; padding: 6px 8px; }
+.ovl .keys { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 12px; color: var(--muted); margin: 6px 0 0 24px; }
+.ovl .st { font-size: 12.5px; color: var(--muted); margin: 5px 0 0 24px; }
+.st.err { color: var(--err); }
+.pc { display: flex; gap: 6px; }
+.pc input { flex: 1; min-width: 0; font: 15px var(--body); padding: 8px 10px; border: 1px solid var(--rule); border-radius: 6px; background: var(--bg); color: var(--ink); text-transform: uppercase; }
+.pc button { font: 600 14px var(--display); letter-spacing: .04em; text-transform: uppercase; padding: 8px 12px; border-radius: 6px; border: 1px solid var(--steel); background: var(--steel); color: var(--panel); cursor: pointer; }
+.pop a { color: #1f4f99; }
+.pop .sw { vertical-align: 0; }
+
 [hidden] { display: none !important; }
 .token { position: absolute; inset: 0; display: grid; place-items: center; padding: 16px; background: color-mix(in srgb, var(--bg) 92%, transparent); z-index: 5; }
 .token form { background: var(--panel); border: 1px solid var(--rule); border-radius: 10px; padding: 20px; max-width: 420px; width: 100%; display: flex; flex-direction: column; gap: 10px; }
@@ -173,6 +191,18 @@ select:focus-visible, button:focus-visible, input:focus-visible, .row:focus-visi
     </div>
 
     <div>
+      <label class="ctl" id="ovl-h">Live open data layers</label>
+      <p class="note" style="margin:0 0 8px">Tick a layer to pull it straight from a public UK open-data API (Open Government Licence or similar). Nothing is stored; figures are as published by each source today.</p>
+      <div class="ovl" id="ovl" role="group" aria-labelledby="ovl-h"></div>
+    </div>
+
+    <div>
+      <label class="ctl" for="pc-in">Find a postcode</label>
+      <form class="pc" id="pc-form"><input id="pc-in" placeholder="e.g. NN18 8DX" autocomplete="postal-code" spellcheck="false" maxlength="9"><button type="submit">Find</button></form>
+      <p class="note" id="pc-st" aria-live="polite"></p>
+    </div>
+
+    <div>
       <label class="ctl" id="bm-h">Base map</label>
       <div class="seg" role="group" aria-labelledby="bm-h">
         <button type="button" data-style="light" aria-pressed="true">Light</button>
@@ -185,6 +215,7 @@ select:focus-visible, button:focus-visible, input:focus-visible, .row:focus-visi
       <p><b>Boundaries:</b> ONS Open Geography Portal — LSOA Dec 2021 BGC V5 and MSOA Dec 2021 BGC V3 (the same generalised boundaries used in the August 2026 evidence pack). Contains OS data © Crown copyright and database right 2021; ONS, Open Government Licence v3.0.</p>
       <p><b>Data:</b> English Indices of Deprivation 2025 (MHCLG; ranks of 33,755, 1 = most deprived) · Census 2021 via Nomis (ONS) · Claimant count July 2026 (ONS/DWP via Nomis) · DfE school performance 2024/25. Compiled in the Pride in Place Deprivation Data Pack; Census figures for the two Exeter LSOAs added from Nomis in October 2026 using the same method. Claimant rates are the ONS published share of residents aged 16–64 for every LSOA; the whole-area rate is approximate.</p>
       <p><b>Boundary:</b> this map's Pride in Place boundary is the published MSOA E02005617 (Kingswood and Hazel Leys) plus the Exeter estate: LSOAs E01026951 (North Northamptonshire 005C) and E01026950 (005B, which takes in Burghley Drive and Brayford Avenue). The two Exeter LSOAs sit in MSOA E02005616, so they are outside the published MSOA; tick the option above to see it. 005B's IMD 2025 ranks come from the MHCLG Local Deprivation Explorer (October 2026). School locations are approximate.</p>
+      <p id="ovl-credits"></p>
       <p>Map © Mapbox © OpenStreetMap contributors.</p>
     </div>
   </aside>
@@ -405,12 +436,22 @@ function startMap(token) {
     if (st) { try { localStorage.removeItem("pip_mapbox_token"); } catch (x) {} map.remove(); map = null; askToken("Mapbox refused that token (it may be wrong, expired or restricted to other websites). Paste a token that allows this page."); }
   });
   map.on("style.load", addLayers);
-  map.on("mousemove", "area-fill", e => { map.getCanvas().style.cursor = "pointer"; setHover(e.features[0].properties.code); });
-  map.on("mouseleave", "area-fill", () => { map.getCanvas().style.cursor = ""; setHover(null); });
-  map.on("click", "area-fill", e => openPopup(e.features[0].properties.code, e.lngLat));
-  map.on("mouseenter", "schools", () => map.getCanvas().style.cursor = "pointer");
-  map.on("mouseleave", "schools", () => map.getCanvas().style.cursor = "");
-  map.on("click", "schools", e => schoolPopup(e.features[0]));
+  map.on("mousemove", "area-fill", e => setHover(e.features[0].properties.code));
+  map.on("mouseleave", "area-fill", () => setHover(null));
+  map.on("mousemove", e => {
+    const base = ["area-fill", "schools"].filter(l => map.getLayer(l));
+    const over = overlayHit(e.point) || (base.length && map.queryRenderedFeatures(e.point, { layers: base }).length);
+    map.getCanvas().style.cursor = over ? "pointer" : "";
+  });
+  // Live open-data features sit on top, so they win the click; schools next, then the LSOA underneath.
+  map.on("click", e => {
+    const hit = overlayHit(e.point);
+    if (hit) return overlayPopup(hit, e.lngLat);
+    const s = map.getLayer("schools") ? map.queryRenderedFeatures(e.point, { layers: ["schools"] }) : [];
+    if (s.length) return schoolPopup(s[0]);
+    const a = map.getLayer("area-fill") ? map.queryRenderedFeatures(e.point, { layers: ["area-fill"] }) : [];
+    if (a.length) openPopup(a[0].properties.code, e.lngLat);
+  });
 }
 
 function addLayers() {
@@ -431,6 +472,7 @@ function addLayers() {
   map.addLayer({ id: "area-hover", type: "line", source: "areas", paint: { "line-color": "#1f6feb", "line-width": ["case", ["boolean", ["feature-state", "hover"], false], 3.5, 0] } });
   map.addLayer({ id: "schools", type: "circle", source: "schools", paint: { "circle-radius": 6.5, "circle-color": "#ffffff", "circle-stroke-color": "#33465c", "circle-stroke-width": 3 } });
   applyStyle(); applyToggles();
+  OVERLAYS.forEach(o => { if (OV[o.id].on && OV[o.id].data) drawOverlay(o); });
 }
 
 function applyStyle() {
@@ -525,6 +567,343 @@ function schoolPopup(f) {
   if (popup) popup.remove();
   popup = new mapboxgl.Popup({ maxWidth: "330px", focusAfterOpen: false }).setLngLat(f.geometry.coordinates).setDOMContent(t).addTo(map);
 }
+
+// ---- Live open data layers ----------------------------------------------------
+// Each layer is fetched in the browser, on demand, from a public UK open-data API.
+// Endpoints and quirks follow the uk-police-data, uk-environment-data, nnc-council-data and uk-area-stats skills.
+const API = {
+  police: "https://data.police.uk/api",
+  stream: "https://services3.arcgis.com/VCOY1atHWVcDlvlJ/arcgis/rest/services/stream_service_outfall_locations_view/FeatureServer/0",
+  planning: "https://www.planning.data.gov.uk",
+  postcodes: "https://api.postcodes.io",
+};
+
+const RING = DATA.features.find(f => f.properties.layer === "boundary").geometry.coordinates[0];
+const BB = allBounds();
+const box = (dx, dy) => [BB[0][0] - dx, BB[0][1] - dy, BB[1][0] + dx, BB[1][1] + dy]; // w, s, e, n
+const WIDE = box(0.045, 0.028);   // ~3 km: overflows and designations reach beyond the estate
+const inBox = (b, x, y) => x >= b[0] && x <= b[2] && y >= b[1] && y <= b[3];
+function inArea(x, y) {
+  let inside = false;
+  for (let i = 0, j = RING.length - 1; i < RING.length; j = i++) {
+    const [xi, yi] = RING[i], [xj, yj] = RING[j];
+    if ((yi > y) !== (yj > y) && x < (xj - xi) * (y - yi) / (yj - yi) + xi) inside = !inside;
+  }
+  return inside;
+}
+
+async function getData(url, opts = {}) {
+  const ctl = new AbortController(), timer = setTimeout(() => ctl.abort(), opts.timeout || 30000);
+  try {
+    const r = await fetch(url, { headers: opts.headers, signal: ctl.signal });
+    if (!r.ok) throw new Error("the server answered " + r.status);
+    return opts.text ? await r.text() : await r.json();
+  } catch (e) {
+    if (e.name === "AbortError") throw new Error("the request timed out");
+    if (e instanceof TypeError) throw new Error("the source is offline or refused a request from this page");
+    throw e;
+  } finally { clearTimeout(timer); }
+}
+const FC = features => ({ type: "FeatureCollection", features });
+const point = (x, y, props) => ({ type: "Feature", geometry: { type: "Point", coordinates: [+x, +y] }, properties: props });
+const dateText = v => { if (v == null || v === "") return "—"; const d = new Date(v); return isNaN(d) ? String(v) : d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }); };
+const dateTimeText = v => { const d = new Date(v); return isNaN(d) ? "—" : d.toLocaleString("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }); };
+const monthText = ym => { const [y, m] = ym.split("-").map(Number); return new Date(y, m - 1, 1).toLocaleDateString("en-GB", { month: "long", year: "numeric" }); };
+const slugText = s => s ? s.charAt(0).toUpperCase() + s.slice(1).replace(/-/g, " ") : "—";
+const plain = html => html ? (new DOMParser().parseFromString(html, "text/html").body.textContent || "").replace(/\s+/g, " ").trim() : "";
+const pick = (p, k) => { if (p[k] !== undefined) return p[k]; const hit = Object.keys(p).find(x => x.toLowerCase() === k.toLowerCase()); return hit ? p[hit] : undefined; };
+const nOf = (n, one, many) => fmt(n) + " " + (n === 1 ? one : many);
+const sizeBy = (key, stops) => ["interpolate", ["linear"], ["to-number", ["get", key], 0], ...stops];
+const ISPOLY = ["match", ["geometry-type"], ["Polygon", "MultiPolygon"], true, false];
+const ISPOINT = ["match", ["geometry-type"], ["Point", "MultiPoint"], true, false];
+
+const CRIME_CATS = [["all-crime", "All crime and ASB"], ["anti-social-behaviour", "Anti-social behaviour"], ["violent-crime", "Violence and sexual offences"],
+  ["criminal-damage-arson", "Criminal damage and arson"], ["burglary", "Burglary"], ["vehicle-crime", "Vehicle crime"], ["shoplifting", "Shoplifting"],
+  ["drugs", "Drugs"], ["public-order", "Public order"], ["robbery", "Robbery"], ["possession-of-weapons", "Possession of weapons"],
+  ["theft-from-the-person", "Theft from the person"], ["bicycle-theft", "Bicycle theft"], ["other-theft", "Other theft"], ["other-crime", "Other crime"]];
+const PLANNING = [["brownfield-land", "Brownfield land register sites"], ["conservation-area", "Conservation areas"], ["listed-building", "Listed buildings"],
+  ["tree-preservation-zone", "Tree preservation order areas"], ["tree", "Protected trees"],
+  ["ancient-woodland", "Ancient woodland"], ["article-4-direction-area", "Article 4 direction areas"]];
+
+const OVERLAYS = [
+  {
+    id: "crime", name: "Police-recorded crime and ASB", sub: "data.police.uk · one month, inside the boundary",
+    credit: "Crime: data.police.uk (Home Office), Open Government Licence v3.0. Locations are anonymised to nearby map points, never exact addresses.",
+    keys: [["#2563eb", "Map point (size = number of incidents)"]],
+    options: [
+      { id: "cat", items: CRIME_CATS },
+      { id: "month", items: async () => (await getData(API.police + "/crimes-street-dates")).map(d => [d.date, monthText(d.date)]) },
+    ],
+    async load(o) {
+      const poly = RING.map(([x, y]) => y.toFixed(5) + "," + x.toFixed(5)).join(":");
+      const rows = await getData(`${API.police}/crimes-street/${o.cat}?poly=${poly}&date=${o.month}`);
+      const at = new Map();
+      rows.forEach(c => {
+        const k = c.location.latitude + "," + c.location.longitude;
+        if (!at.has(k)) at.set(k, { x: c.location.longitude, y: c.location.latitude, street: c.location.street && c.location.street.name, cats: {}, outs: {} });
+        const g = at.get(k); g.cats[c.category] = (g.cats[c.category] || 0) + 1;
+        const out = c.category === "anti-social-behaviour" ? null : (c.outcome_status ? c.outcome_status.category : "No outcome recorded yet");
+        if (out) g.outs[out] = (g.outs[out] || 0) + 1;
+      });
+      const feats = [...at.values()].map(g => point(g.x, g.y, { count: Object.values(g.cats).reduce((a, b) => a + b, 0), street: g.street || "", cats: JSON.stringify(g.cats), outs: JSON.stringify(g.outs), month: o.month }));
+      const label = CRIME_CATS.find(c => c[0] === o.cat)[1];
+      return { data: FC(feats), status: `${fmt(rows.length)} incidents (${label.toLowerCase()}) in ${monthText(o.month)} at ${nOf(feats.length, "map point", "map points")}.` };
+    },
+    layers: [
+      { id: "pts", type: "circle", paint: { "circle-radius": sizeBy("count", [1, 5, 5, 9, 20, 17, 50, 24]), "circle-color": "#2563eb", "circle-opacity": 0.8, "circle-stroke-color": "#ffffff", "circle-stroke-width": 1.5 } },
+      { id: "n", type: "symbol", filter: [">", ["get", "count"], 1], layout: { "text-field": ["to-string", ["get", "count"]], "text-size": 11, "text-font": ["DIN Pro Bold", "Arial Unicode MS Bold"], "text-allow-overlap": true }, paint: { "text-color": "#ffffff" } },
+    ],
+    click: ["pts"],
+    popup(p) {
+      const rows = Object.entries(JSON.parse(p.cats)).sort((a, b) => b[1] - a[1]).map(([k, v]) => [slugText(k), v]);
+      const outs = Object.entries(JSON.parse(p.outs)).sort((a, b) => b[1] - a[1]);
+      if (outs.length) rows.push(["#Outcome (crimes, not ASB)"], ...outs);
+      return popBox(p.street || "Map point", `${p.count} incident${p.count == 1 ? "" : "s"} · ${monthText(p.month)}`, rows,
+        "Police locations are snapped to the nearest anonymous map point, so this is the general area, not an address.");
+    },
+  },
+  {
+    id: "hood", name: "Police neighbourhood teams", sub: "data.police.uk · team areas and current priorities",
+    credit: "Neighbourhood teams: data.police.uk (Home Office), Open Government Licence v3.0.",
+    keys: [["dash:#2563eb", "Neighbourhood team boundary"]],
+    async load() {
+      const pts = areas.map(f => f.properties).map(p => `${p.label_lat},${p.label_lon}`);
+      const found = await Promise.all(pts.map(q => getData(`${API.police}/locate-neighbourhood?q=${q}`).catch(() => null)));
+      const ids = [...new Map(found.filter(Boolean).map(r => [r.force + "/" + r.neighbourhood, r])).values()];
+      if (!ids.length) throw new Error("no neighbourhood team was found for this area");
+      const feats = await Promise.all(ids.map(async r => {
+        const base = `${API.police}/${r.force}/${r.neighbourhood}`;
+        const [info, bnd, pri] = await Promise.all([getData(base), getData(base + "/boundary"), getData(base + "/priorities").catch(() => [])]);
+        const ring = bnd.map(b => [+b.longitude, +b.latitude]); ring.push(ring[0]);
+        const priorities = pri.slice(0, 4).map(x => ({ issue: plain(x.issue), action: plain(x.action), date: x["issue-date"] }));
+        return { type: "Feature", geometry: { type: "Polygon", coordinates: [ring] }, properties: { name: info.name, id: r.neighbourhood, url: info.url_force || "", email: (info.contact_details && info.contact_details.email) || "", priorities: JSON.stringify(priorities) } };
+      }));
+      return { data: FC(feats), status: "Covered by: " + feats.map(f => `${f.properties.name} (${f.properties.id})`).join(", ") + ". Click a boundary line for priorities." };
+    },
+    layers: [
+      { id: "halo", type: "line", paint: { "line-color": "#ffffff", "line-width": 5, "line-opacity": 0.8 } },
+      { id: "line", type: "line", paint: { "line-color": "#2563eb", "line-width": 2.5, "line-dasharray": [2, 1.2] } },
+    ],
+    click: ["line", "halo"],
+    popup(p) {
+      const pri = JSON.parse(p.priorities);
+      const rows = pri.length ? pri.flatMap((x, i) => [["#Priority " + (i + 1) + (x.date ? " · set " + dateText(x.date) : "")], [x.issue || "—"]].concat(x.action ? [["Action: " + x.action]] : [])) : [["No current priorities published"]];
+      const links = [];
+      if (p.url) links.push(link(p.url, "Team page"));
+      if (p.email) links.push(link("mailto:" + p.email, p.email));
+      return popBox(p.name, "Northamptonshire Police · " + p.id, rows, links);
+    },
+  },
+  {
+    id: "overflow", name: "Storm overflows: live status", sub: "Anglian Water via Stream · within ~3 km",
+    credit: "Storm overflows: contains data © Anglian Water Services (CC BY 4.0), via the Stream storm overflow service. A spill is an event report, not proof of a breach.",
+    keys: [["#b3261e", "Spilling now"], ["#7a6a55", "Not spilling"], ["#9aa4af", "Monitor offline"]],
+    async load() {
+      const env = WIDE.map(v => v.toFixed(4)).join(",");
+      const g = await getData(`${API.stream}/query?where=1%3D1&geometry=${env}&geometryType=esriGeometryEnvelope&inSR=4326&spatialRel=esriSpatialRelIntersects&outFields=*&outSR=4326&f=geojson`);
+      const feats = (g.features || []).filter(f => f.geometry).map(f => {
+        const p = f.properties || {};
+        return { type: "Feature", geometry: f.geometry, properties: { id: pick(p, "Id") || "", status: +pick(p, "Status"), water: pick(p, "ReceivingWaterCourse") || "", company: pick(p, "Company") || "", since: pick(p, "StatusStart") || "", lastStart: pick(p, "LatestEventStart") || "", lastEnd: pick(p, "LatestEventEnd") || "", updated: pick(p, "LastUpdated") || "" } };
+      });
+      const c = s => feats.filter(f => f.properties.status === s).length;
+      return { data: FC(feats), status: `${c(1)} spilling now, ${c(0)} not spilling, ${c(-1)} offline, out of ${feats.length} overflows. Checked ${dateTimeText(Date.now())}.` };
+    },
+    layers: [{ id: "pts", type: "circle", paint: { "circle-radius": ["match", ["get", "status"], 1, 8, 6], "circle-color": ["match", ["get", "status"], 1, "#b3261e", 0, "#7a6a55", "#9aa4af"], "circle-stroke-color": "#ffffff", "circle-stroke-width": 2 } }],
+    click: ["pts"],
+    popup(p) {
+      const st = { 1: "Spilling now", 0: "Not spilling", "-1": "Monitor offline" }[p.status] || "Unknown";
+      return popBox(p.water || "Storm overflow", [p.company, p.id].filter(Boolean).join(" · "),
+        [["Status", st + (p.since ? " since " + dateTimeText(+p.since) : "")], ["Last spill started", p.lastStart ? dateTimeText(+p.lastStart) : "—"], ["Last spill ended", p.lastEnd ? dateTimeText(+p.lastEnd) : "—"], ["Feed updated", p.updated ? dateTimeText(+p.updated) : "—"]]);
+    },
+  },
+  {
+    id: "planning", name: "Planning and land designations", sub: "planning.data.gov.uk · pick a dataset",
+    credit: "Planning designations: Planning Data Platform (planning.data.gov.uk), Open Government Licence v3.0.",
+    keys: [["#15803d", "Site, area or building"]],
+    options: [{ id: "dataset", items: PLANNING }],
+    async load(o) {
+      const [w, s, e, n] = WIDE;
+      const wkt = `POLYGON((${w} ${s},${e} ${s},${e} ${n},${w} ${n},${w} ${s}))`;
+      const g = await getData(`${API.planning}/entity.geojson?dataset=${o.dataset}&geometry=${encodeURIComponent(wkt)}&geometry_relation=intersects&limit=500`);
+      const feats = (g.features || []).filter(f => f.geometry).map(f => {
+        const p = f.properties || {}, extra = {};
+        Object.entries(p).forEach(([k, v]) => { if (v !== "" && v != null && typeof v !== "object" && !/geometry|point|^dataset$|organisation|prefix|typology|entry-date|end-date/.test(k) && String(v).length < 140) extra[k] = v; });
+        return { type: "Feature", geometry: f.geometry, properties: { name: p.name || p.reference || "Unnamed", entity: p.entity || "", dataset: o.dataset, extra: JSON.stringify(extra) } };
+      });
+      const label = PLANNING.find(x => x[0] === o.dataset)[1];
+      return { data: FC(feats), status: feats.length ? `${fmt(feats.length)} found within ~3 km (${label.toLowerCase()}).` : `No ${label.toLowerCase()} published within ~3 km (or not yet supplied by the council).` };
+    },
+    layers: [
+      { id: "fill", type: "fill", filter: ISPOLY, paint: { "fill-color": "#15803d", "fill-opacity": 0.22 } },
+      { id: "edge", type: "line", filter: ISPOLY, paint: { "line-color": "#15803d", "line-width": 1.8 } },
+      { id: "pts", type: "circle", filter: ISPOINT, paint: { "circle-radius": 5, "circle-color": "#15803d", "circle-stroke-color": "#ffffff", "circle-stroke-width": 1.5 } },
+    ],
+    click: ["pts", "fill"],
+    popup(p) {
+      const rows = Object.entries(JSON.parse(p.extra)).filter(([k]) => !["name", "entity"].includes(k)).map(([k, v]) => [slugText(k), /date$/.test(k) ? dateText(v) : String(v)]);
+      return popBox(p.name, PLANNING.find(x => x[0] === p.dataset)[1], rows, p.entity ? [link(`https://www.planning.data.gov.uk/entity/${p.entity}`, "Record on planning.data.gov.uk")] : null);
+    },
+  },
+];
+
+// State per layer: on/off, last data, chosen options, request generation (newest wins).
+const OV = Object.fromEntries(OVERLAYS.map(o => [o.id, { on: false, data: null, opts: {}, gen: 0 }]));
+const ovLayerId = (o, l) => `ov-${o.id}-${l.id}`;
+const POINTY = new Set(["circle", "symbol"]);
+
+function overlayHit(pt) {
+  if (!map) return null;
+  // points before polygons, newest-ticked layer first
+  const ids = [];
+  OVERLAYS.forEach(o => { if (OV[o.id].on) o.click.forEach(c => { const id = `ov-${o.id}-${c}`; if (map.getLayer(id)) ids.push(id); }); });
+  if (!ids.length) return null;
+  const hits = map.queryRenderedFeatures(pt, { layers: ids });
+  hits.sort((a, b) => POINTY.has(b.layer.type) - POINTY.has(a.layer.type));
+  return hits[0] || null;
+}
+function overlayPopup(f, lngLat) {
+  const o = OVERLAYS.find(x => f.layer.id.startsWith(`ov-${x.id}-`));
+  const at = f.geometry.type === "Point" ? f.geometry.coordinates : lngLat;
+  showPopup(o.popup(f.properties), at);
+}
+
+function drawOverlay(o) {
+  if (!map || !map.getLayer("boundary-halo")) return; // addLayers() redraws once the style is ready
+  const src = "ov-" + o.id, st = OV[o.id];
+  if (!st.on || !st.data) { removeOverlay(o); return; }
+  if (map.getSource(src)) { map.getSource(src).setData(st.data); return; }
+  map.addSource(src, { type: "geojson", data: st.data });
+  o.layers.forEach(l => {
+    const def = Object.assign({}, l, { id: ovLayerId(o, l), source: src });
+    // areas and lines go under the boundary line; points and labels go on top
+    map.addLayer(def, POINTY.has(l.type) ? undefined : "boundary-halo");
+  });
+}
+function removeOverlay(o) {
+  if (!map) return;
+  o.layers.forEach(l => { if (map.getLayer(ovLayerId(o, l))) map.removeLayer(ovLayerId(o, l)); });
+  if (map.getSource("ov-" + o.id)) map.removeSource("ov-" + o.id);
+}
+
+async function loadOverlay(o) {
+  const st = OV[o.id], gen = ++st.gen, el = st.status;
+  el.className = "st"; el.textContent = "Loading…";
+  try {
+    const res = await o.load(st.opts);
+    if (gen !== st.gen || !st.on) return;
+    st.data = res.data; el.textContent = res.status; drawOverlay(o);
+  } catch (e) {
+    if (gen !== st.gen) return;
+    st.data = null; drawOverlay(o);
+    el.className = "st err"; el.textContent = "Couldn't load this layer: " + e.message + ". Try again later.";
+  }
+}
+
+function buildOverlayPanel() {
+  const wrap = document.getElementById("ovl");
+  OVERLAYS.forEach(o => {
+    const st = OV[o.id], row = document.createElement("div");
+    const lab = document.createElement("label"); lab.className = "t";
+    const cb = document.createElement("input"); cb.type = "checkbox"; cb.id = "ov-" + o.id;
+    const txt = document.createElement("span"); txt.textContent = o.name;
+    const sm = document.createElement("small"); sm.textContent = o.sub; txt.appendChild(sm);
+    lab.append(cb, txt); row.appendChild(lab);
+    const extra = document.createElement("div"); extra.hidden = true;
+    if (o.options) {
+      const opts = document.createElement("div"); opts.className = "opts";
+      o.options.forEach(op => {
+        const s = document.createElement("select"); s.setAttribute("aria-label", o.name + ": " + op.id);
+        const fill = items => { s.innerHTML = ""; items.forEach(([v, t]) => { const x = document.createElement("option"); x.value = v; x.textContent = t; s.appendChild(x); }); st.opts[op.id] = s.value; };
+        if (typeof op.items === "function") { op.ready = () => op.items().then(fill); } else fill(op.items);
+        s.addEventListener("change", () => { st.opts[op.id] = s.value; if (st.on) loadOverlay(o); });
+        opts.appendChild(s);
+      });
+      extra.appendChild(opts);
+    }
+    const keys = document.createElement("div"); keys.className = "keys";
+    o.keys.forEach(([c, t]) => {
+      const k = document.createElement("span"), sw = document.createElement("i");
+      if (c.startsWith("dash:")) { sw.className = "sw dash"; sw.style.borderTopColor = c.slice(5); } else { sw.className = "sw"; sw.style.background = c; sw.style.borderRadius = "50%"; }
+      k.append(sw, t); keys.appendChild(k);
+    });
+    extra.appendChild(keys);
+    st.status = document.createElement("p"); st.status.className = "st"; st.status.setAttribute("aria-live", "polite");
+    extra.appendChild(st.status); row.appendChild(extra); wrap.appendChild(row);
+    cb.addEventListener("change", async () => {
+      st.on = cb.checked; extra.hidden = !cb.checked;
+      if (!cb.checked) { st.gen++; removeOverlay(o); if (popup) popup.remove(); return; }
+      const pending = (o.options || []).filter(op => op.ready && st.opts[op.id] == null);
+      if (pending.length) {
+        st.status.className = "st"; st.status.textContent = "Loading options…";
+        try { await Promise.all(pending.map(op => op.ready())); }
+        catch (e) { st.status.className = "st err"; st.status.textContent = "Couldn't reach the source: " + e.message + "."; return; }
+      }
+      if (st.on) loadOverlay(o);
+    });
+  });
+  const credits = document.getElementById("ovl-credits");
+  const b = document.createElement("b"); b.textContent = "Live layers: "; credits.appendChild(b);
+  credits.append(OVERLAYS.map(o => o.credit).join(" · ") + " · Postcode lookup: postcodes.io (ONS Postcode Directory, OGL).");
+}
+
+// ---- Popups ---------------------------------------------------------------------
+// rows: [label, value] pairs; [text] for a full-width line; ["#Heading"] for a group heading.
+function popBox(title, sub, rows, extra) {
+  const t = document.createElement("div"); t.className = "pop";
+  const h = document.createElement("h3"); h.textContent = title; t.appendChild(h);
+  if (sub) { const s = document.createElement("div"); s.className = "sub"; s.textContent = sub; t.appendChild(s); }
+  if (rows && rows.length) {
+    const tb = document.createElement("table");
+    rows.forEach(r => {
+      const tr = tb.insertRow();
+      if (r.length === 1) {
+        const c = tr.insertCell(); c.colSpan = 2;
+        if (String(r[0]).startsWith("#")) { tr.className = "grp"; c.textContent = r[0].slice(1); } else { c.textContent = r[0]; c.style.textAlign = "left"; c.style.whiteSpace = "normal"; }
+      } else { tr.insertCell().textContent = r[0]; tr.insertCell().textContent = r[1]; }
+    });
+    t.appendChild(tb);
+  }
+  if (extra) {
+    const d = document.createElement("div"); d.className = "sub"; d.style.marginTop = "6px";
+    [].concat(extra).forEach((x, i) => { if (i) d.append(" · "); d.append(x); });
+    t.appendChild(d);
+  }
+  return t;
+}
+function link(href, text) { const a = document.createElement("a"); a.href = href; a.textContent = text; a.target = "_blank"; a.rel = "noopener"; return a; }
+function showPopup(node, lngLat) {
+  if (popup) popup.remove();
+  popup = new mapboxgl.Popup({ maxWidth: "330px", focusAfterOpen: false }).setLngLat(lngLat).setDOMContent(node).addTo(map);
+}
+
+// ---- Postcode lookup (postcodes.io) --------------------------------------------
+let pcMarker = null;
+document.getElementById("pc-form").addEventListener("submit", async e => {
+  e.preventDefault();
+  const pc = document.getElementById("pc-in").value.trim().toUpperCase(), st = document.getElementById("pc-st");
+  st.className = "note";
+  if (!/^[A-Z]{1,2}\d[A-Z\d]?\s*\d[A-Z]{2}$/.test(pc)) { st.className = "note st err"; st.textContent = "Enter a full UK postcode, like NN18 8DX."; return; }
+  st.textContent = "Looking up…";
+  try {
+    const r = (await getData(`${API.postcodes}/postcodes/${encodeURIComponent(pc)}`)).result;
+    if (!r || r.latitude == null) throw new Error("that postcode has no map location");
+    const codes = r.codes || {}, lsoa = codes.lsoa21 || codes.lsoa;
+    const inside = inArea(r.longitude, r.latitude), mine = areas.find(f => f.properties.code === lsoa);
+    st.textContent = `${r.postcode} is ${inside ? "inside" : "outside"} the Pride in Place boundary · ${r.admin_ward || "ward unknown"} ward.`;
+    if (!map) return;
+    if (pcMarker) pcMarker.remove();
+    pcMarker = new mapboxgl.Marker({ color: "#c99400" }).setLngLat([r.longitude, r.latitude]).addTo(map);
+    map.flyTo({ center: [r.longitude, r.latitude], zoom: Math.max(map.getZoom(), 15), duration: matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 900 });
+    const rows = [["Inside Pride in Place area", inside ? "Yes" : "No"], ["Council ward", r.admin_ward || "—"], ["Constituency", r.parliamentary_constituency_2024 || r.parliamentary_constituency || "—"], ["LSOA", (r.lsoa21 || r.lsoa || "—") + (lsoa ? " (" + lsoa + ")" : "")]];
+    if (mine) rows.push(["IMD 2025 rank", rankCell(mine.properties.imd_rank)]);
+    const box = popBox(r.postcode, "Postcode lookup", rows, mine ? [Object.assign(link("#", "Open this neighbourhood's figures"), { target: "", onclick: ev => { ev.preventDefault(); focusArea(mine.properties.code); } })] : null);
+    showPopup(box, [r.longitude, r.latitude]);
+  } catch (err) {
+    st.className = "note st err"; st.textContent = /404/.test(err.message) ? "Postcode not found." : "Couldn't look that up: " + err.message + ".";
+  }
+});
+
+buildOverlayPanel();
 
 update();
 const tok = getToken();

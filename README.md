@@ -19,3 +19,15 @@ The boundary and data file is in [`data/corby-pip-khle.geojson`](data/corby-pip-
 - Census 2021 and claimant count (ONS via Nomis)
 - DfE school data 2024/25 (school locations approximate)
 - Base map © Mapbox © OpenStreetMap contributors
+
+## Plain English rule
+
+Every data set on the map is explained in plain English: each indicator has a short description of what it measures and which way is worse (shown under the "Show on map" dropdown), and jargon in popups is spelled out. This applies to any data added in future. See [`CLAUDE.md`](CLAUDE.md); `node scripts/check-plain-english.js` checks every indicator has a description.
+
+### Glossary
+
+- **LSOA** (Lower-layer Super Output Area): a small statistical area of roughly 1,500 people. The map shows nine.
+- **MSOA** (Middle-layer Super Output Area): a larger area made up of several LSOAs.
+- **IMD** (Index of Multiple Deprivation): the government's official measure of how deprived an area is. Rank 1 is the most deprived of 33,755 areas in England.
+- **IDACI / IDAOPI**: the share of children / older people living in low-income families.
+- **Claimant rate**: the share of 16-64 year-olds claiming Universal Credit or Jobseeker's Allowance for being out of work or on a low income.

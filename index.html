@@ -160,7 +160,7 @@ select:focus-visible, button:focus-visible, input:focus-visible, .row:focus-visi
       <div><b>14,178</b><span>residents (Census 2021)</span></div>
       <div><b>5,519</b><span>households</span></div>
       <div><b>3.06</b><span>km² inside the boundary</span></div>
-      <div><b>9 of 9</b><span>LSOAs in England's most deprived 25%</span></div>
+      <div><b>9 of 9</b><span>neighbourhoods in England's most deprived 25%</span></div>
     </div>
 
     <div>
@@ -187,7 +187,7 @@ select:focus-visible, button:focus-visible, input:focus-visible, .row:focus-visi
     </div>
 
     <div class="toggles">
-      <label><input type="checkbox" id="t-msoa"> Show the published MSOA boundary (without Exeter)</label>
+      <label><input type="checkbox" id="t-msoa"> Show the larger official area (MSOA) without Exeter</label>
       <label><input type="checkbox" id="t-schools" checked> Show schools</label>
       <label><input type="checkbox" id="t-labels" checked> Show area labels</label>
     </div>
@@ -253,7 +253,7 @@ const PCT_COLOURS = ["#f8dfc8", "#f2ad7f", "#e5785c", "#c9485a", "#8a2160"]; // 
 
 const IND = [
   { group: "Indices of Deprivation 2025 (rank of 33,755)", items: [
-    { key: "imd_rank", name: "IMD 2025 — overall", type: "rank", plain: "The government's overall score for how deprived a neighbourhood is, combining income, jobs, health, education, crime, housing and living environment. Every neighbourhood in England is ranked; 1 is the most deprived of 33,755." },
+    { key: "imd_rank", name: "Overall deprivation (IMD 2025)", type: "rank", plain: "The government's overall score for how deprived a neighbourhood is, combining income, jobs, health, education, crime, housing and living environment. Every neighbourhood in England is ranked; 1 is the most deprived of 33,755." },
     { key: "income", name: "Income", type: "rank", plain: "How many people live on a low income, including those claiming benefits and tax credits. A low rank means more people are struggling financially." },
     { key: "employment", name: "Employment", type: "rank", plain: "How many working-age people are out of work because of unemployment, sickness, disability or caring. A low rank means fewer people are in work." },
     { key: "education", name: "Education, skills & training", type: "rank", plain: "How well children do at school and how many adults have few or no qualifications. A low rank means poorer results and skills." },
@@ -328,7 +328,7 @@ function renderLegend(ind) {
   if (ind.type === "rank") {
     RANK_COLOURS.forEach(c => { const s = document.createElement("span"); s.style.background = c; ramp.appendChild(s); });
     ["≤1%", "1–3%", "3–5%", "5–10%", "10–20%", "20–50%", ">50%"].forEach(t => { const s = document.createElement("span"); s.textContent = t; ticks.appendChild(s); });
-    document.getElementById("ind-note").textContent = "Coloured by the share of England's 33,755 LSOAs that are more deprived. Rank 1 is the most deprived in England.";
+    document.getElementById("ind-note").textContent = "Coloured by the share of England's 33,755 neighbourhoods that are more deprived. Rank 1 is the most deprived in England.";
   } else {
     const br = pctBreaks(ind);
     const vals = areas.map(f => f.properties[ind.key]).filter(v => v != null);
@@ -336,7 +336,7 @@ function renderLegend(ind) {
     const cols = ind.higherBetter ? [...PCT_COLOURS].reverse() : PCT_COLOURS;
     cols.forEach(c => { const s = document.createElement("span"); s.style.background = c; ramp.appendChild(s); });
     br.forEach((b, i) => { const s = document.createElement("span"); const from = i === 0 ? lo : br[i - 1]; s.textContent = i === br.length - 1 ? "≥" + from.toFixed(1) : from.toFixed(1) + "–" + b.toFixed(1); ticks.appendChild(s); });
-    document.getElementById("ind-note").textContent = "Five equal bands across the nine LSOAs." + (ind.higherBetter ? " Fewer degree-level qualifications shows darker." : "");
+    document.getElementById("ind-note").textContent = "Five equal bands across the nine neighbourhoods." + (ind.higherBetter ? " Fewer degree-level qualifications shows darker." : "");
   }
 }
 
@@ -370,7 +370,7 @@ function renderList(ind) {
       const s = document.createElement("span"); s.innerHTML = k + " <b></b>"; s.querySelector("b").textContent = (i === 0 && ind.approxArea ? "≈" : "") + v.toFixed(1) + "%"; cmp.appendChild(s);
     });
   } else {
-    const s = document.createElement("span"); s.textContent = "007G is the most deprived LSOA in North Northamptonshire (1st of 205)."; cmp.appendChild(s);
+    const s = document.createElement("span"); s.textContent = "007G is the most deprived neighbourhood in North Northamptonshire (1st of 205)."; cmp.appendChild(s);
   }
 }
 
@@ -540,8 +540,8 @@ function openPopup(code, lngLat) {
   const tb = document.createElement("table");
   const add = (k, v, hi) => { const tr = tb.insertRow(); if (hi) tr.className = "hi"; tr.insertCell().textContent = k; tr.insertCell().textContent = v; };
   const grp = k => { const tr = tb.insertRow(); tr.className = "grp"; const c = tr.insertCell(); c.colSpan = 2; c.textContent = k; };
-  grp("IMD 2025 rank · most deprived %");
-  IND[0].items.forEach(i => add(i.name.replace(/ \(.*\)/, "").replace("IMD 2025 — overall", "Overall IMD"), rankCell(p[i.key]), i.key === current));
+  grp("Deprivation rank in England (1 = most deprived) · share of areas more deprived");
+  IND[0].items.forEach(i => add(i.name.replace(/ \(.*\)/, "").replace("Overall deprivation (IMD 2025)", "Overall deprivation"), rankCell(p[i.key]), i.key === current));
   add("Rank in North Northants (of 205)", fmt(p.la_rank), false);
   if (p.population != null) {
     grp("Census 2021 · claimant count");
@@ -624,13 +624,13 @@ const CRIME_CATS = [["all-crime", "All crime and ASB"], ["anti-social-behaviour"
   ["criminal-damage-arson", "Criminal damage and arson"], ["burglary", "Burglary"], ["vehicle-crime", "Vehicle crime"], ["shoplifting", "Shoplifting"],
   ["drugs", "Drugs"], ["public-order", "Public order"], ["robbery", "Robbery"], ["possession-of-weapons", "Possession of weapons"],
   ["theft-from-the-person", "Theft from the person"], ["bicycle-theft", "Bicycle theft"], ["other-theft", "Other theft"], ["other-crime", "Other crime"]];
-const PLANNING = [["brownfield-land", "Brownfield land register sites"], ["conservation-area", "Conservation areas"], ["listed-building", "Listed buildings"],
-  ["tree-preservation-zone", "Tree preservation order areas"], ["tree", "Protected trees"],
-  ["ancient-woodland", "Ancient woodland"], ["article-4-direction-area", "Article 4 direction areas"]];
+const PLANNING = [["brownfield-land", "Brownfield sites (previously built-on land that could be redeveloped)"], ["conservation-area", "Conservation areas (areas with extra protection for their character)"], ["listed-building", "Listed buildings (protected for their history or design)"],
+  ["tree-preservation-zone", "Tree protection areas (trees legally protected from felling)"], ["tree", "Individual protected trees"],
+  ["ancient-woodland", "Ancient woodland (woods that have existed since at least 1600)"], ["article-4-direction-area", "Article 4 areas (where the council has removed some building rights without planning permission)"]];
 
 const OVERLAYS = [
   {
-    id: "crime", name: "Police-recorded crime and ASB", sub: "data.police.uk · one month, inside the boundary",
+    id: "crime", plain: "Crimes and anti-social behaviour (ASB, such as rowdy or nuisance behaviour) reported to the police in one month. Each dot is a general spot, not an exact address; bigger dots mean more incidents.", name: "Police-recorded crime and anti-social behaviour", sub: "data.police.uk · one month, inside the boundary",
     credit: "Crime: data.police.uk (Home Office), Open Government Licence v3.0. Locations are anonymised to nearby map points, never exact addresses.",
     keys: [["#2563eb", "Map point (size = number of incidents)"]],
     options: [
@@ -666,7 +666,7 @@ const OVERLAYS = [
     },
   },
   {
-    id: "hood", name: "Police neighbourhood teams", sub: "data.police.uk · team areas and current priorities",
+    id: "hood", plain: "The area covered by your local neighbourhood police team, and what that team says it is currently focusing on.", name: "Police neighbourhood teams", sub: "data.police.uk · team areas and current priorities",
     credit: "Neighbourhood teams: data.police.uk (Home Office), Open Government Licence v3.0.",
     keys: [["dash:#2563eb", "Neighbourhood team boundary"]],
     async load() {
@@ -698,7 +698,7 @@ const OVERLAYS = [
     },
   },
   {
-    id: "overflow", name: "Storm overflows: live status", sub: "Anglian Water via Stream · within ~3 km",
+    id: "overflow", plain: "Places where sewers can release mixed rainwater and sewage into rivers during heavy rain, to stop it backing up into homes. Red means it is releasing right now; this alone does not mean anything has gone wrong.", name: "Storm overflows: live status", sub: "Anglian Water via Stream · within ~3 km",
     credit: "Storm overflows: contains data © Anglian Water Services (CC BY 4.0), via the Stream storm overflow service. A spill is an event report, not proof of a breach.",
     keys: [["#b3261e", "Spilling now"], ["#7a6a55", "Not spilling"], ["#9aa4af", "Monitor offline"]],
     async load() {
@@ -720,7 +720,7 @@ const OVERLAYS = [
     },
   },
   {
-    id: "planning", name: "Planning and land designations", sub: "planning.data.gov.uk · pick a dataset",
+    id: "planning", plain: "Land and buildings with special planning rules or history, such as protected buildings and trees. Pick a type from the list to see where it is.", name: "Planning and land designations", sub: "planning.data.gov.uk · pick a dataset",
     credit: "Planning designations: Planning Data Platform (planning.data.gov.uk), Open Government Licence v3.0.",
     keys: [["#15803d", "Site, area or building"]],
     options: [{ id: "dataset", items: PLANNING }],
@@ -811,6 +811,7 @@ function buildOverlayPanel() {
     const txt = document.createElement("span"); txt.textContent = o.name;
     const sm = document.createElement("small"); sm.textContent = o.sub; txt.appendChild(sm);
     lab.append(cb, txt); row.appendChild(lab);
+    const pl = document.createElement("p"); pl.className = "note"; pl.style.margin = "2px 0 6px 26px"; pl.textContent = o.plain; row.appendChild(pl);
     const extra = document.createElement("div"); extra.hidden = true;
     if (o.options) {
       const opts = document.createElement("div"); opts.className = "opts";

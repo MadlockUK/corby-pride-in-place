@@ -122,9 +122,7 @@ select:focus-visible, button:focus-visible, input:focus-visible, .row:focus-visi
 .st.err { color: var(--err); }
 .pc { display: flex; gap: 6px; }
 .pc input { flex: 1; min-width: 0; font: 15px var(--body); padding: 8px 10px; border: 1px solid var(--rule); border-radius: 6px; background: var(--bg); color: var(--ink); text-transform: uppercase; }
-.pc button, .btn { font: 600 14px var(--display); letter-spacing: .04em; text-transform: uppercase; padding: 8px 12px; border-radius: 6px; border: 1px solid var(--steel); background: var(--steel); color: var(--panel); cursor: pointer; }
-.btn.ghost { background: none; color: var(--steel); margin-top: 8px; }
-.btn:disabled { opacity: .6; cursor: progress; }
+.pc button { font: 600 14px var(--display); letter-spacing: .04em; text-transform: uppercase; padding: 8px 12px; border-radius: 6px; border: 1px solid var(--steel); background: var(--steel); color: var(--panel); cursor: pointer; }
 .pop a { color: #1f4f99; }
 .pop .sw { vertical-align: 0; }
 
@@ -168,8 +166,6 @@ select:focus-visible, button:focus-visible, input:focus-visible, .row:focus-visi
       <label class="ctl" for="ind">Show on map</label>
       <select id="ind"></select>
       <p class="note" id="ind-note"></p>
-      <button type="button" class="btn ghost" id="nomis-btn">Get the latest claimant month from Nomis</button>
-      <p class="note" id="nomis-st" aria-live="polite"></p>
     </div>
 
     <div class="legend" aria-live="polite">
@@ -369,7 +365,6 @@ function renderList(ind) {
   cmp.innerHTML = "";
   if (ind.cmp) {
     [["Pride in Place area", ind.cmp[0]], ["North Northants", ind.cmp[1]], ["England", ind.cmp[2]]].forEach(([k, v], i) => {
-      if (v == null) return;
       const s = document.createElement("span"); s.innerHTML = k + " <b></b>"; s.querySelector("b").textContent = (i === 0 && ind.approxArea ? "≈" : "") + v.toFixed(1) + "%"; cmp.appendChild(s);
     });
   } else {
@@ -578,22 +573,15 @@ function schoolPopup(f) {
 // Endpoints and quirks follow the uk-police-data, uk-environment-data, nnc-council-data and uk-area-stats skills.
 const API = {
   police: "https://data.police.uk/api",
-  fms: "https://highways.northnorthants.gov.uk/open311/v2",
-  ea: "https://environment.data.gov.uk/flood-monitoring",
   stream: "https://services3.arcgis.com/VCOY1atHWVcDlvlJ/arcgis/rest/services/stream_service_outfall_locations_view/FeatureServer/0",
-  fsa: "https://api.ratings.food.gov.uk",
   planning: "https://www.planning.data.gov.uk",
-  dft: "https://roadtraffic.dft.gov.uk/api",
-  nomis: "https://www.nomisweb.co.uk/api/v01/dataset",
   postcodes: "https://api.postcodes.io",
 };
 
 const RING = DATA.features.find(f => f.properties.layer === "boundary").geometry.coordinates[0];
 const BB = allBounds();
 const box = (dx, dy) => [BB[0][0] - dx, BB[0][1] - dy, BB[1][0] + dx, BB[1][1] + dy]; // w, s, e, n
-const NEAR = box(0.008, 0.005);   // ~500 m round the boundary
-const WIDE = box(0.045, 0.028);   // ~3 km: rivers, overflows and main roads reach beyond the estate
-const CENTRE = [(BB[0][0] + BB[1][0]) / 2, (BB[0][1] + BB[1][1]) / 2];
+const WIDE = box(0.045, 0.028);   // ~3 km: overflows and designations reach beyond the estate
 const inBox = (b, x, y) => x >= b[0] && x <= b[2] && y >= b[1] && y <= b[3];
 function inArea(x, y) {
   let inside = false;
@@ -618,7 +606,6 @@ async function getData(url, opts = {}) {
 }
 const FC = features => ({ type: "FeatureCollection", features });
 const point = (x, y, props) => ({ type: "Feature", geometry: { type: "Point", coordinates: [+x, +y] }, properties: props });
-const isoDay = d => d.toISOString().slice(0, 10);
 const dateText = v => { if (v == null || v === "") return "—"; const d = new Date(v); return isNaN(d) ? String(v) : d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }); };
 const dateTimeText = v => { const d = new Date(v); return isNaN(d) ? "—" : d.toLocaleString("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }); };
 const monthText = ym => { const [y, m] = ym.split("-").map(Number); return new Date(y, m - 1, 1).toLocaleDateString("en-GB", { month: "long", year: "numeric" }); };
@@ -626,8 +613,6 @@ const slugText = s => s ? s.charAt(0).toUpperCase() + s.slice(1).replace(/-/g, "
 const plain = html => html ? (new DOMParser().parseFromString(html, "text/html").body.textContent || "").replace(/\s+/g, " ").trim() : "";
 const pick = (p, k) => { if (p[k] !== undefined) return p[k]; const hit = Object.keys(p).find(x => x.toLowerCase() === k.toLowerCase()); return hit ? p[hit] : undefined; };
 const nOf = (n, one, many) => fmt(n) + " " + (n === 1 ? one : many);
-const n0 = v => v == null || v === "" ? "—" : fmt(Math.round(+v));
-const insideNote = (feats, total) => { const k = feats.filter(f => f.properties.inside).length; return `${fmt(total)} found, ${fmt(k)} inside the boundary`; };
 const sizeBy = (key, stops) => ["interpolate", ["linear"], ["to-number", ["get", key], 0], ...stops];
 const ISPOLY = ["match", ["geometry-type"], ["Polygon", "MultiPolygon"], true, false];
 const ISPOINT = ["match", ["geometry-type"], ["Point", "MultiPoint"], true, false];
@@ -636,9 +621,8 @@ const CRIME_CATS = [["all-crime", "All crime and ASB"], ["anti-social-behaviour"
   ["criminal-damage-arson", "Criminal damage and arson"], ["burglary", "Burglary"], ["vehicle-crime", "Vehicle crime"], ["shoplifting", "Shoplifting"],
   ["drugs", "Drugs"], ["public-order", "Public order"], ["robbery", "Robbery"], ["possession-of-weapons", "Possession of weapons"],
   ["theft-from-the-person", "Theft from the person"], ["bicycle-theft", "Bicycle theft"], ["other-theft", "Other theft"], ["other-crime", "Other crime"]];
-const FHRS_COL = { 0: "#b3261e", 1: "#b3261e", 2: "#e5785c", 3: "#d6a21e", 4: "#3f9b5c", 5: "#1f7a43" };
 const PLANNING = [["brownfield-land", "Brownfield land register sites"], ["conservation-area", "Conservation areas"], ["listed-building", "Listed buildings"],
-  ["tree-preservation-zone", "Tree preservation order areas"], ["tree", "Protected trees"], ["flood-risk-zone", "Flood risk zones"],
+  ["tree-preservation-zone", "Tree preservation order areas"], ["tree", "Protected trees"],
   ["ancient-woodland", "Ancient woodland"], ["article-4-direction-area", "Article 4 direction areas"]];
 
 const OVERLAYS = [
@@ -711,72 +695,6 @@ const OVERLAYS = [
     },
   },
   {
-    id: "fms", name: "Street reports to the council", sub: "NNC FixMyStreet (Open311) · potholes, fly-tipping, lights…",
-    credit: "Street reports: North Northamptonshire Council FixMyStreet (Open311). Reports are submitted by residents and not verified.",
-    keys: [["#d97706", "Open"], ["#0f9d8a", "Closed / fixed"]],
-    options: [
-      { id: "days", items: [["90", "Last 3 months"], ["30", "Last 30 days"], ["365", "Last 12 months"]] },
-      { id: "status", items: [["", "Open and closed"], ["open", "Open only"], ["closed", "Closed only"]] },
-    ],
-    async load(o) {
-      const start = isoDay(new Date(Date.now() - o.days * 864e5));
-      const j = await getData(`${API.fms}/requests.json?jurisdiction_id=fixmystreet&start_date=${start}&lat=${CENTRE[1].toFixed(5)}&long=${CENTRE[0].toFixed(5)}&max_requests=1000${o.status ? "&status=" + o.status : ""}`);
-      const unwrap = v => Array.isArray(v) ? v.flatMap(x => x && x.request ? [].concat(x.request) : [x]) : v && (v.service_requests || v.requests) ? unwrap(v.service_requests || v.requests) : v && v.request ? [].concat(v.request) : [];
-      const rows = unwrap(j).filter(r => r && r.lat != null && inBox(NEAR, +r.long, +r.lat));
-      const feats = rows.map(r => point(r.long, r.lat, { id: r.service_request_id || "", service: r.service_name || "Report", status: r.status || "", desc: (r.description || "").slice(0, 300), date: r.requested_datetime || "", updated: r.updated_datetime || "", inside: inArea(+r.long, +r.lat) }));
-      return { data: FC(feats), status: insideNote(feats, feats.length) + "." };
-    },
-    layers: [{ id: "pts", type: "circle", paint: { "circle-radius": 5.5, "circle-color": ["match", ["get", "status"], "open", "#d97706", "#0f9d8a"], "circle-stroke-color": "#ffffff", "circle-stroke-width": 1.5 } }],
-    click: ["pts"],
-    popup(p) {
-      return popBox(p.service, (p.status ? slugText(p.status) : "Report") + " · reported " + dateText(p.date),
-        [[p.desc || "No description"], ["Last updated", dateText(p.updated)]],
-        p.id ? [link(`https://highways.northnorthants.gov.uk/report/${p.id}`, "See the report on FixMyStreet")] : null);
-    },
-  },
-  {
-    id: "flood", name: "Flood warnings and river gauges", sub: "Environment Agency real-time API · updates every 15 min",
-    credit: "This uses Environment Agency flood and river level data from the real-time data API (Beta).",
-    keys: [["#d32f2f", "Flood warning"], ["#f2a900", "Flood alert"], ["#0284c7", "Monitoring station"]],
-    async load() {
-      const q = `lat=${CENTRE[1].toFixed(4)}&long=${CENTRE[0].toFixed(4)}`;
-      const [fl, st] = await Promise.all([getData(`${API.ea}/id/floods?${q}&dist=6`), getData(`${API.ea}/id/stations?${q}&dist=5`)]);
-      const warn = (fl.items || []).filter(w => w.severityLevel <= 3);
-      const polys = await Promise.all(warn.map(async w => {
-        const url = w.floodArea && w.floodArea.polygon; if (!url) return [];
-        const g = await getData(url).catch(() => null); if (!g) return [];
-        return (g.features || [g]).filter(f => f.geometry).map(f => ({ type: "Feature", geometry: f.geometry, properties: { kind: "warning", label: w.description || w.eaAreaName || "Flood area", severity: w.severity || "", level: w.severityLevel, message: (w.message || "").slice(0, 400), raised: w.timeRaised || "" } }));
-      }));
-      const first = v => Array.isArray(v) ? v[0] : v;
-      const stations = (st.items || []).filter(s => first(s.lat) != null).map(s => point(first(s.long), first(s.lat), {
-        kind: "station", label: s.label || s.stationReference, ref: s.stationReference || s.notation || "", river: s.riverName || "", town: s.town || "",
-        params: [...new Set([].concat(s.measures || []).map(m => m.parameterName || m.parameter).filter(Boolean))].join(", "),
-      }));
-      return { data: FC(polys.flat().concat(stations)), status: `${warn.length ? warn.length + " flood warning" + (warn.length > 1 ? "s or alerts" : " or alert") + " in force nearby" : "No flood warnings or alerts in force within 6 km"} · ${nOf(stations.length, "monitoring station", "monitoring stations")}. Checked ${dateTimeText(Date.now())}.` };
-    },
-    layers: [
-      { id: "fill", type: "fill", filter: ISPOLY, paint: { "fill-color": ["case", ["<=", ["to-number", ["get", "level"], 4], 2], "#d32f2f", "#f2a900"], "fill-opacity": 0.3 } },
-      { id: "edge", type: "line", filter: ISPOLY, paint: { "line-color": ["case", ["<=", ["to-number", ["get", "level"], 4], 2], "#d32f2f", "#b07800"], "line-width": 1.5 } },
-      { id: "pts", type: "circle", filter: ISPOINT, paint: { "circle-radius": 6, "circle-color": "#0284c7", "circle-stroke-color": "#ffffff", "circle-stroke-width": 2 } },
-    ],
-    click: ["pts", "fill"],
-    popup(p) {
-      if (p.kind === "warning") return popBox(p.label, p.severity + " · raised " + dateTimeText(p.raised), [[p.message || "No message"]]);
-      const box = popBox(p.label, [p.river, p.town, p.ref].filter(Boolean).join(" · "), [["Measures", p.params || "—"], ["Latest reading", "loading…"]]);
-      const cell = box.querySelector("tr:last-child td:last-child");
-      Promise.all([getData(`${API.ea}/id/stations/${p.ref}/readings?latest`), getData(`${API.ea}/id/stations/${p.ref}`).catch(() => null)]).then(([r, s]) => {
-        const items = (r.items || []).filter(x => typeof x.value === "number");
-        if (!items.length) { cell.textContent = "none published"; return; }
-        cell.textContent = items.map(x => x.value + (/-m(AOD|ASD)?$|level/.test(x.measure || "") ? " m" : /rainfall/.test(x.measure || "") ? " mm" : "")).join(" / ") + " at " + dateTimeText(items[0].dateTime);
-        const sc = s && s.items && [].concat(s.items)[0] && [].concat(s.items)[0].stageScale;
-        if (sc && typeof sc === "object" && sc.typicalRangeHigh != null) {
-          const tr = cell.parentNode.parentNode.insertRow(); tr.insertCell().textContent = "Typical range"; tr.insertCell().textContent = `${sc.typicalRangeLow}–${sc.typicalRangeHigh} m`;
-        }
-      }).catch(e => { cell.textContent = "couldn't load (" + e.message + ")"; });
-      return box;
-    },
-  },
-  {
     id: "overflow", name: "Storm overflows: live status", sub: "Anglian Water via Stream · within ~3 km",
     credit: "Storm overflows: contains data © Anglian Water Services (CC BY 4.0), via the Stream storm overflow service. A spill is an event report, not proof of a breach.",
     keys: [["#b3261e", "Spilling now"], ["#7a6a55", "Not spilling"], ["#9aa4af", "Monitor offline"]],
@@ -796,28 +714,6 @@ const OVERLAYS = [
       const st = { 1: "Spilling now", 0: "Not spilling", "-1": "Monitor offline" }[p.status] || "Unknown";
       return popBox(p.water || "Storm overflow", [p.company, p.id].filter(Boolean).join(" · "),
         [["Status", st + (p.since ? " since " + dateTimeText(+p.since) : "")], ["Last spill started", p.lastStart ? dateTimeText(+p.lastStart) : "—"], ["Last spill ended", p.lastEnd ? dateTimeText(+p.lastEnd) : "—"], ["Feed updated", p.updated ? dateTimeText(+p.updated) : "—"]]);
-    },
-  },
-  {
-    id: "food", name: "Food hygiene ratings", sub: "Food Standards Agency · cafés, takeaways, shops, schools",
-    credit: "Food hygiene: Food Standards Agency food hygiene rating data (Open Government Licence). Check the rating date: places may have been re-inspected.",
-    keys: [["#1f7a43", "4–5"], ["#d6a21e", "3"], ["#e5785c", "2"], ["#b3261e", "0–1"], ["#9aa4af", "Exempt / awaiting"]],
-    options: [{ id: "show", items: [["all", "All rated premises"], ["low", "Rated 0–2 only"]] }],
-    async load(o) {
-      const j = await getData(`${API.fsa}/Establishments?latitude=${CENTRE[1].toFixed(5)}&longitude=${CENTRE[0].toFixed(5)}&maxDistanceLimit=1.5&pageSize=1000`, { headers: { "x-api-version": "2", "Accept": "application/json" } });
-      let rows = (j.establishments || []).filter(e => e.geocode && e.geocode.latitude && inBox(NEAR, +e.geocode.longitude, +e.geocode.latitude));
-      if (o.show === "low") rows = rows.filter(e => /^[012]$/.test(String(e.RatingValue)));
-      const feats = rows.map(e => point(e.geocode.longitude, e.geocode.latitude, {
-        name: e.BusinessName, type: e.BusinessType || "", rating: String(e.RatingValue), date: e.RatingDate || "", id: e.FHRSID || "",
-        address: [e.AddressLine1, e.AddressLine2, e.AddressLine3, e.PostCode].filter(Boolean).join(", "), inside: inArea(+e.geocode.longitude, +e.geocode.latitude),
-      }));
-      return { data: FC(feats), status: insideNote(feats, feats.length) + "." };
-    },
-    layers: [{ id: "pts", type: "circle", paint: { "circle-radius": 5.5, "circle-color": ["match", ["get", "rating"], ...Object.entries(FHRS_COL).flat(), "#9aa4af"], "circle-stroke-color": "#ffffff", "circle-stroke-width": 1.5 } }],
-    click: ["pts"],
-    popup(p) {
-      const r = /^\d$/.test(p.rating) ? p.rating + " out of 5" : slugText(p.rating.replace(/([a-z])([A-Z])/g, "$1-$2").toLowerCase());
-      return popBox(p.name, p.type, [["Rating", r], ["Rated on", dateText(p.date)], [p.address]], p.id ? [link(`https://ratings.food.gov.uk/business/${p.id}`, "Full rating on food.gov.uk")] : null);
     },
   },
   {
@@ -846,32 +742,6 @@ const OVERLAYS = [
     popup(p) {
       const rows = Object.entries(JSON.parse(p.extra)).filter(([k]) => !["name", "entity"].includes(k)).map(([k, v]) => [slugText(k), /date$/.test(k) ? dateText(v) : String(v)]);
       return popBox(p.name, PLANNING.find(x => x[0] === p.dataset)[1], rows, p.entity ? [link(`https://www.planning.data.gov.uk/entity/${p.entity}`, "Record on planning.data.gov.uk")] : null);
-    },
-  },
-  {
-    id: "traffic", name: "Road traffic counts", sub: "DfT · average vehicles a day, latest year per count point",
-    credit: "Road traffic: Department for Transport road traffic statistics (Open Government Licence v3.0).",
-    keys: [["#334155", "Count point (size = vehicles a day)"]],
-    async load() {
-      const all = [];
-      for (let page = 1; page <= 12; page++) {
-        const j = await getData(`${API.dft}/average-annual-daily-flow?filter%5Blocal_authority_id%5D=211&page%5Bsize%5D=250&page%5Bnumber%5D=${page}`);
-        const rows = Array.isArray(j) ? j : (j.data || []);
-        all.push(...rows);
-        if (rows.length < 250) break;
-      }
-      const latest = new Map();
-      all.filter(r => r.latitude != null && inBox(WIDE, +r.longitude, +r.latitude)).forEach(r => {
-        const k = r.count_point_id; if (!latest.has(k) || +r.year > +latest.get(k).year) latest.set(k, r);
-      });
-      const feats = [...latest.values()].map(r => point(r.longitude, r.latitude, { road: r.road_name || "", year: r.year, motor: +r.all_motor_vehicles || 0, hgv: r.all_hgvs, cycles: r.pedal_cycles, cars: r.cars_and_taxis, method: r.estimation_method || "", id: r.count_point_id, from: r.start_junction_road_name || "", to: r.end_junction_road_name || "" }));
-      return { data: FC(feats), status: `${nOf(feats.length, "count point", "count points")} within ~3 km.` };
-    },
-    layers: [{ id: "pts", type: "circle", paint: { "circle-radius": sizeBy("motor", [0, 4, 5000, 6, 20000, 11, 50000, 16]), "circle-color": "#334155", "circle-opacity": 0.85, "circle-stroke-color": "#ffffff", "circle-stroke-width": 1.5 } }],
-    click: ["pts"],
-    popup(p) {
-      return popBox(p.road || "Count point", `Count point ${p.id} · ${p.year}` + (p.from || p.to ? ` · ${p.from} to ${p.to}` : ""),
-        [["All motor vehicles a day", n0(p.motor)], ["Cars and taxis", n0(p.cars)], ["HGVs", n0(p.hgv)], ["Pedal cycles", n0(p.cycles)], ["Method", p.method || "—"]]);
     },
   },
 ];
@@ -973,7 +843,7 @@ function buildOverlayPanel() {
   });
   const credits = document.getElementById("ovl-credits");
   const b = document.createElement("b"); b.textContent = "Live layers: "; credits.appendChild(b);
-  credits.append(OVERLAYS.map(o => o.credit).join(" · ") + " · Postcode lookup: postcodes.io (ONS Postcode Directory, OGL). Live claimant figures: ONS/DWP via Nomis.");
+  credits.append(OVERLAYS.map(o => o.credit).join(" · ") + " · Postcode lookup: postcodes.io (ONS Postcode Directory, OGL).");
 }
 
 // ---- Popups ---------------------------------------------------------------------
@@ -1031,52 +901,6 @@ document.getElementById("pc-form").addEventListener("submit", async e => {
   } catch (err) {
     st.className = "note st err"; st.textContent = /404/.test(err.message) ? "Postcode not found." : "Couldn't look that up: " + err.message + ".";
   }
-});
-
-// ---- Latest claimant count (Nomis, NM_162_1) --------------------------------------
-function parseCSV(t) {
-  const rows = []; let row = [], f = "", q = false;
-  for (let i = 0; i < t.length; i++) {
-    const c = t[i];
-    if (q) { if (c === '"') { if (t[i + 1] === '"') { f += '"'; i++; } else q = false; } else f += c; }
-    else if (c === '"') q = true;
-    else if (c === ",") { row.push(f); f = ""; }
-    else if (c === "\n") { row.push(f); rows.push(row); row = []; f = ""; }
-    else if (c !== "\r") f += c;
-  }
-  if (f || row.length) { row.push(f); rows.push(row); }
-  return rows;
-}
-document.getElementById("nomis-btn").addEventListener("click", async () => {
-  const btn = document.getElementById("nomis-btn"), st = document.getElementById("nomis-st");
-  btn.disabled = true; st.className = "note"; st.textContent = "Asking Nomis…";
-  try {
-    const geos = areas.map(f => f.properties.code).concat(["E06000061", "E92000001"]).join(",");
-    const csv = await getData(`${API.nomis}/NM_162_1.data.csv?geography=${geos}&date=latest&gender=0&age=0&measure=1,2&measures=20100&select=date_name,geography_code,measure,obs_value`, { text: true });
-    const [head, ...body] = parseCSV(csv.trim()), ix = k => head.findIndex(h => h.trim().toLowerCase() === k);
-    const [iD, iG, iM, iV] = ["date_name", "geography_code", "measure", "obs_value"].map(ix);
-    if ([iD, iG, iM, iV].some(i => i < 0) || !body.length) throw new Error("Nomis sent an unexpected reply");
-    const val = {}; let month = "";
-    body.forEach(r => { month = r[iD]; (val[r[iG]] = val[r[iG]] || {})[r[iM]] = r[iV] === "" ? null : +r[iV]; });
-    let cnt = 0, pop = 0;
-    areas.forEach(f => {
-      const v = val[f.properties.code] || {};
-      f.properties.claimant_live = v[2] != null ? v[2] : null; f.properties.claimant_live_count = v[1] != null ? v[1] : null;
-      if (v[1] != null && v[2]) { cnt += v[1]; pop += v[1] / (v[2] / 100); }
-    });
-    const ind = byKey.claimant_live || { key: "claimant_live", type: "pct", approxArea: true };
-    ind.name = `Claimant rate, ${month} (% of 16–64, live from Nomis)`;
-    ind.cmp = [pop ? cnt / pop * 100 : null, (val.E06000061 || {})[2] ?? null, (val.E92000001 || {})[2] ?? null];
-    if (!byKey.claimant_live) {
-      IND[1].items.unshift(ind); ALL.push(ind); byKey.claimant_live = ind;
-      const o = document.createElement("option"); o.value = ind.key; sel.querySelectorAll("optgroup")[1].prepend(o);
-    }
-    sel.querySelector('option[value="claimant_live"]').textContent = ind.name;
-    current = "claimant_live"; sel.value = current; update();
-    st.textContent = `Updated to ${month}: ${fmt(cnt)} claimants across the nine LSOAs. Newest months are provisional and may be revised.`;
-  } catch (e) {
-    st.className = "note st err"; st.textContent = "Couldn't reach Nomis: " + e.message + ". The July 2026 figures above still stand.";
-  } finally { btn.disabled = false; }
 });
 
 buildOverlayPanel();

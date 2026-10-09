@@ -20,17 +20,10 @@ Below the indicator list, the panel has a set of **live layers** a viewer can sw
 |---|---|---|
 | Police-recorded crime and ASB | [data.police.uk](https://data.police.uk/docs/) | Incidents inside the boundary for a chosen month and category, grouped by anonymised map point, with outcomes |
 | Police neighbourhood teams | data.police.uk | The team area(s) covering the estate, with current published priorities and contact |
-| Street reports to the council | NNC FixMyStreet (Open311) | Potholes, fly-tipping, lights etc. reported in the last 30 days / 3 months / 12 months, open or closed |
-| Flood warnings and river gauges | [Environment Agency real-time API](https://environment.data.gov.uk/flood-monitoring/doc/reference) | Warnings/alerts in force (with flood-area outlines) and monitoring stations with their latest reading |
 | Storm overflows: live status | Anglian Water via Stream (ArcGIS) | Overflows within ~3 km, coloured spilling / not spilling / offline |
-| Food hygiene ratings | [Food Standards Agency API](https://api.ratings.food.gov.uk/help) | Rated premises around the area, or only those rated 0–2 |
-| Planning and land designations | [planning.data.gov.uk](https://www.planning.data.gov.uk/docs) | Brownfield sites, conservation areas, listed buildings, TPOs, flood risk zones and more |
-| Road traffic counts | [DfT road traffic API](https://roadtraffic.dft.gov.uk/api-docs) | Average vehicles a day at each count point, latest year |
+| Planning and land designations | [planning.data.gov.uk](https://www.planning.data.gov.uk/docs) | Brownfield sites, conservation areas, listed buildings, tree preservation orders, ancient woodland and more |
 
-Also in the panel:
-
-- **Get the latest claimant month from Nomis**: refreshes the claimant rate for all nine LSOAs (plus North Northants and England for comparison) from Nomis `NM_162_1` and adds it as a map indicator.
-- **Find a postcode**: looks a postcode up on [postcodes.io](https://postcodes.io), drops a pin, and says whether it is inside the Pride in Place boundary, with its ward, constituency, LSOA and IMD 2025 rank.
+Also in the panel, **Find a postcode**: looks a postcode up on [postcodes.io](https://postcodes.io), drops a pin, and says whether it is inside the Pride in Place boundary, with its ward, constituency, LSOA and IMD 2025 rank.
 
 If a source is down or refuses a request from the page, that layer shows an error and the rest of the map keeps working.
 
@@ -40,5 +33,5 @@ If a source is down or refuses a request from the page, that layer shows an erro
 - English Indices of Deprivation 2025 (MHCLG)
 - Census 2021 and claimant count (ONS via Nomis)
 - DfE school data 2024/25 (school locations approximate)
-- Live layers: data.police.uk (Home Office, OGL v3); Environment Agency flood and river level data from the real-time data API (Beta); Anglian Water Services storm overflow data (CC BY 4.0); Food Standards Agency food hygiene ratings; Planning Data Platform (OGL v3); DfT road traffic statistics (OGL v3); NNC FixMyStreet; postcodes.io (ONS Postcode Directory, OGL); Nomis (ONS/DWP)
+- Live layers: data.police.uk (Home Office, OGL v3); Anglian Water Services storm overflow data (CC BY 4.0); Planning Data Platform (OGL v3); postcodes.io (ONS Postcode Directory, OGL)
 - Base map © Mapbox © OpenStreetMap contributors

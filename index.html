@@ -1,0 +1,534 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Kingswood, Hazel Leys &amp; Exeter Map</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Barlow+Condensed:wght@500;600;700&display=swap">
+<link rel="stylesheet" href="https://api.mapbox.com/mapbox-gl-js/v3.6.0/mapbox-gl.css">
+<style>
+/* Layout: full-height split — data panel (left, scrolls) + Mapbox map (right). Stacks map-over-panel on phones. */
+:root {
+  --bg: #f3f4f1;
+  --panel: #ffffff;
+  --ink: #1d232b;
+  --muted: #5b6470;
+  --rule: #d9ddd6;
+  --steel: #33465c;
+  --gold: #c99400;
+  --gold-ink: #7a5900;
+  --focus: #1f6feb;
+  --display: "Barlow Condensed", "Arial Narrow", "Roboto Condensed", sans-serif;
+  --body: "Atkinson Hyperlegible", "Segoe UI", Arial, sans-serif;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #12161b; --panel: #1a2027; --ink: #e8ebee; --muted: #9aa4af; --rule: #2c343d;
+    --steel: #9db4cc; --gold: #e2b23a; --gold-ink: #f0c95c; --focus: #6aa6ff; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #12161b; --panel: #1a2027; --ink: #e8ebee; --muted: #9aa4af; --rule: #2c343d;
+  --steel: #9db4cc; --gold: #e2b23a; --gold-ink: #f0c95c; --focus: #6aa6ff; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; }
+body { background: var(--bg); color: var(--ink); font: 15px/1.5 var(--body); }
+.app { display: grid; grid-template-columns: minmax(300px, 380px) 1fr; height: 100%; }
+.panel { background: var(--panel); border-right: 1px solid var(--rule); overflow-y: auto; padding: 20px 20px 28px; display: flex; flex-direction: column; gap: 18px; min-width: 0; }
+.mapwrap { position: relative; min-width: 0; }
+#map { position: absolute; inset: 0; }
+
+.eyebrow { font: 600 13px/1 var(--display); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 0; }
+h1 { font: 700 30px/1.02 var(--display); margin: 6px 0 0; text-wrap: balance; letter-spacing: .005em; }
+.lede { margin: 8px 0 0; color: var(--muted); font-size: 14px; }
+.facts { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0; border-block: 1px solid var(--rule); }
+.facts div { padding: 10px 6px 9px 0; }
+.facts b { display: block; font: 700 21px/1.05 var(--display); font-variant-numeric: tabular-nums; }
+.facts span { font-size: 11.5px; color: var(--muted); line-height: 1.25; display: block; margin-top: 2px; }
+
+label.ctl { display: block; font: 600 13px/1 var(--display); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
+select { width: 100%; font: 15px var(--body); padding: 9px 10px; border: 1px solid var(--rule); border-radius: 6px; background: var(--bg); color: var(--ink); }
+select:focus-visible, button:focus-visible, input:focus-visible, .row:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.note { font-size: 13px; color: var(--muted); margin: 6px 0 0; }
+
+.legend { display: flex; flex-direction: column; gap: 4px; }
+.legend .ramp { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; height: 12px; border-radius: 2px; overflow: hidden; }
+.legend .ticks { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; font-size: 11.5px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.legend .ticks span { text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.legend .keys { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 12.5px; color: var(--muted); margin-top: 4px; }
+.sw { display: inline-block; width: 12px; height: 12px; border-radius: 2px; vertical-align: -1px; margin-right: 5px; }
+.sw.x { background: repeating-linear-gradient(135deg, var(--gold) 0 3px, transparent 3px 6px); outline: 2px solid var(--gold); outline-offset: -2px; }
+.sw.line { height: 0; border-top: 3px solid var(--ink); width: 18px; border-radius: 0; vertical-align: 3px; }
+.sw.dot { border-radius: 50%; background: #fff; border: 3px solid var(--steel); }
+.sw.dash { height: 0; border-top: 3px dotted var(--muted); width: 18px; border-radius: 0; vertical-align: 3px; }
+
+.list { display: flex; flex-direction: column; border-top: 1px solid var(--rule); }
+.row { display: grid; grid-template-columns: 14px 54px 1fr auto; align-items: center; gap: 10px; padding: 8px 2px; border-bottom: 1px solid var(--rule); cursor: pointer; background: none; border-left: 0; border-right: 0; border-top: 0; color: inherit; font: inherit; text-align: left; width: 100%; }
+.row:hover, .row.on { background: color-mix(in srgb, var(--steel) 9%, transparent); }
+.row .id { font: 700 17px/1 var(--display); }
+.row.adj .id { color: var(--gold-ink); }
+.row .bar { height: 6px; background: var(--rule); border-radius: 3px; overflow: hidden; }
+.row .bar i { display: block; height: 100%; background: var(--steel); }
+.row .val { font-variant-numeric: tabular-nums; font-size: 13.5px; text-align: right; white-space: nowrap; }
+.row .val small { color: var(--muted); display: block; font-size: 11.5px; }
+.cmp { display: flex; gap: 14px; flex-wrap: wrap; font-size: 12.5px; color: var(--muted); margin-top: 8px; font-variant-numeric: tabular-nums; }
+.cmp b { color: var(--ink); font-weight: 700; }
+
+.toggles { display: flex; flex-direction: column; gap: 6px; font-size: 14px; }
+.toggles label { display: flex; align-items: center; gap: 8px; cursor: pointer; }
+.toggles input { width: 16px; height: 16px; accent-color: var(--steel); }
+.seg { display: inline-flex; border: 1px solid var(--rule); border-radius: 6px; overflow: hidden; }
+.seg button { font: 14px var(--body); background: none; color: var(--ink); border: 0; padding: 6px 12px; cursor: pointer; }
+.seg button + button { border-left: 1px solid var(--rule); }
+.seg button[aria-pressed="true"] { background: var(--steel); color: var(--panel); }
+
+.sources { font-size: 12px; color: var(--muted); border-top: 1px solid var(--rule); padding-top: 12px; }
+.sources p { margin: 0 0 6px; }
+.sources a { color: inherit; }
+
+/* map labels (HTML markers, so no glyph server is needed) */
+.lbl { pointer-events: none; text-align: center; font: 700 15px/1 var(--display); color: #10151b; text-shadow: 0 0 3px #fff, 0 0 3px #fff, 0 0 6px #fff; white-space: nowrap; }
+.lbl small { display: block; font: 600 12px/1.1 var(--body); margin-top: 2px; }
+.lbl.adj { color: #5c4300; }
+.lbl.dark { color: #fff; text-shadow: 0 0 3px #000, 0 0 3px #000, 0 0 6px #000; }
+.lbl.dark.adj { color: #ffd766; }
+
+.mapboxgl-popup-content { font: 13.5px/1.4 var(--body); color: #1d232b; padding: 12px 14px; border-radius: 8px; max-width: 320px; }
+.pop { max-height: min(56vh, 440px); overflow-y: auto; padding-right: 4px; }
+.pop h3 { font: 700 19px/1.05 "Barlow Condensed", "Arial Narrow", sans-serif; margin: 0 0 2px; }
+.pop .sub { color: #5b6470; font-size: 12px; margin-bottom: 8px; }
+.pop .flag { background: #fff3cf; border-left: 3px solid #c99400; padding: 5px 8px; font-size: 12px; margin-bottom: 8px; }
+.pop table { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nums; }
+.pop td { padding: 2px 0; border-bottom: 1px solid #eceee9; font-size: 12.5px; }
+.pop td:last-child { text-align: right; white-space: nowrap; padding-left: 10px; }
+.pop tr.hi td { font-weight: 700; }
+.pop .grp td { color: #5b6470; font-size: 11px; text-transform: uppercase; letter-spacing: .06em; padding-top: 8px; border-bottom: 0; }
+
+[hidden] { display: none !important; }
+.token { position: absolute; inset: 0; display: grid; place-items: center; padding: 16px; background: color-mix(in srgb, var(--bg) 92%, transparent); z-index: 5; }
+.token form { background: var(--panel); border: 1px solid var(--rule); border-radius: 10px; padding: 20px; max-width: 420px; width: 100%; display: flex; flex-direction: column; gap: 10px; }
+.token h2 { font: 700 22px/1.1 var(--display); margin: 0; }
+.token p { margin: 0; font-size: 14px; color: var(--muted); }
+.token input { font: 14px ui-monospace, Consolas, monospace; padding: 9px 10px; border-radius: 6px; border: 1px solid var(--rule); background: var(--bg); color: var(--ink); width: 100%; }
+.token button { font: 600 16px var(--display); letter-spacing: .04em; text-transform: uppercase; padding: 10px; border-radius: 6px; border: 0; background: var(--steel); color: var(--panel); cursor: pointer; }
+.token .err { color: #b3261e; font-size: 13px; }
+:root[data-theme="dark"] .token .err { color: #ff8a80; }
+
+@media (max-width: 760px) {
+  html, body { height: auto; }
+  .app { grid-template-columns: 1fr; height: auto; }
+  .mapwrap { order: -1; height: 62vh; min-height: 360px; }
+  .panel { border-right: 0; overflow: visible; padding-inline: 16px; }
+  .facts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="panel" aria-label="Data panel">
+    <header>
+      <p class="eyebrow">Corby · Pride in Place neighbourhood</p>
+      <h1>Kingswood, Hazel Leys &amp; Exeter</h1>
+      <p class="lede">All nine neighbourhoods (LSOAs) in the Pride in Place area: Kingswood and Hazel Leys (007A–007G) and the Exeter estate (005B and 005C, including Burghley Drive). Darker always means more deprived.</p>
+    </header>
+
+    <div class="facts" aria-label="Neighbourhood summary">
+      <div><b>14,178</b><span>residents (Census 2021)</span></div>
+      <div><b>5,519</b><span>households</span></div>
+      <div><b>3.06</b><span>km² inside the boundary</span></div>
+      <div><b>9 of 9</b><span>LSOAs in England's most deprived 25%</span></div>
+    </div>
+
+    <div>
+      <label class="ctl" for="ind">Show on map</label>
+      <select id="ind"></select>
+      <p class="note" id="ind-note"></p>
+    </div>
+
+    <div class="legend" aria-live="polite">
+      <div class="ramp" id="ramp"></div>
+      <div class="ticks" id="ticks"></div>
+      <div class="keys">
+        <span><i class="sw line"></i>Pride in Place boundary (incl. Exeter)</span>
+        <span><i class="sw dash"></i>Published MSOA, without Exeter (optional)</span>
+        <span><i class="sw dot"></i>School</span>
+      </div>
+    </div>
+
+    <div>
+      <label class="ctl" id="list-h">Ranked, most deprived first</label>
+      <div class="list" id="list" role="list"></div>
+      <div class="cmp" id="cmp"></div>
+    </div>
+
+    <div class="toggles">
+      <label><input type="checkbox" id="t-msoa"> Show the published MSOA boundary (without Exeter)</label>
+      <label><input type="checkbox" id="t-schools" checked> Show schools</label>
+      <label><input type="checkbox" id="t-labels" checked> Show area labels</label>
+    </div>
+
+    <div>
+      <label class="ctl" id="bm-h">Base map</label>
+      <div class="seg" role="group" aria-labelledby="bm-h">
+        <button type="button" data-style="light" aria-pressed="true">Light</button>
+        <button type="button" data-style="streets" aria-pressed="false">Streets</button>
+        <button type="button" data-style="satellite" aria-pressed="false">Satellite</button>
+      </div>
+    </div>
+
+    <div class="sources">
+      <p><b>Boundaries:</b> ONS Open Geography Portal — LSOA Dec 2021 BGC V5 and MSOA Dec 2021 BGC V3 (the same generalised boundaries used in the August 2026 evidence pack). Contains OS data © Crown copyright and database right 2021; ONS, Open Government Licence v3.0.</p>
+      <p><b>Data:</b> English Indices of Deprivation 2025 (MHCLG; ranks of 33,755, 1 = most deprived) · Census 2021 via Nomis (ONS) · Claimant count July 2026 (ONS/DWP via Nomis) · DfE school performance 2024/25. Compiled in the Pride in Place Deprivation Data Pack; Census figures for the two Exeter LSOAs added from Nomis in October 2026 using the same method. Claimant rates are the ONS published share of residents aged 16–64 for every LSOA; the whole-area rate is approximate.</p>
+      <p><b>Boundary:</b> this map's Pride in Place boundary is the published MSOA E02005617 (Kingswood and Hazel Leys) plus the Exeter estate: LSOAs E01026951 (North Northamptonshire 005C) and E01026950 (005B, which takes in Burghley Drive and Brayford Avenue). The two Exeter LSOAs sit in MSOA E02005616, so they are outside the published MSOA; tick the option above to see it. 005B's IMD 2025 ranks come from the MHCLG Local Deprivation Explorer (October 2026). School locations are approximate.</p>
+      <p>Map © Mapbox © OpenStreetMap contributors.</p>
+    </div>
+  </aside>
+
+  <main class="mapwrap">
+    <div id="map" role="region" aria-label="Interactive map of the Pride in Place neighbourhood"></div>
+    <div class="token" id="token" hidden>
+      <form id="token-form">
+        <h2>Add your Mapbox token</h2>
+        <p>Paste a public Mapbox access token (it starts with <code>pk.</code>). It is saved in this browser only, so you only need to do this once.</p>
+        <label class="ctl" for="token-in">Mapbox public token</label>
+        <input id="token-in" autocomplete="off" spellcheck="false" placeholder="pk.eyJ1Ijoi…">
+        <p class="err" id="token-err" hidden></p>
+        <button type="submit">Load map</button>
+      </form>
+    </div>
+  </main>
+</div>
+
+<script src="https://api.mapbox.com/mapbox-gl-js/v3.6.0/mapbox-gl.js"></script>
+<script>
+// ---- Settings -------------------------------------------------------------
+// Put your public Mapbox token here to skip the prompt. Restrict it by URL in your Mapbox account.
+const MAPBOX_TOKEN = "pk.eyJ1IjoibWFkbG9ja3VrIiwiYSI6ImNtcmJxeWM3azI2ZnczMHNhbDlwcnZ1MXEifQ.ebgfrWztsoR5R-EjdyQs-A";
+
+const DATA = {"type":"FeatureCollection","name":"corby_pride_in_place_khle","metadata":{"boundaries":"ONS Open Geography Portal: LSOA Dec 2021 BGC V5 and MSOA Dec 2021 BGC V3 (generalised, clipped), EPSG:4326. Contains OS data © Crown copyright and database right 2021. Source: Office for National Statistics licensed under the Open Government Licence v3.0.","boundary":"Working Pride in Place boundary (from 9 Oct 2026) = published MSOA E02005617 'North Northamptonshire 007' (Kingswood and Hazel Leys) + the Exeter estate LSOAs E01026951 (005C) and E01026950 (005B, incl. Burghley Drive NN18 8DX). The two Exeter LSOAs sit in MSOA E02005616, outside the published MSOA.","exeter_data":"Exeter LSOAs are not in the Aug data pack: IMD 2025 for 005C from the pack, for 005B from the MHCLG Local Deprivation Explorer; Census 2021 for both from Nomis using the pack's method.","claimant":"Claimant rate = ONS published claimants as a proportion of residents aged 16-64, July 2026 (Nomis NM_162_1), for all nine LSOAs. Whole-area rate is approximate.","area_totals":{"pip":{"population":14178,"households":5519,"hh_deprived_3plus":8.3,"no_quals":31.6,"level4_quals":16.3,"social_rented":30.2,"private_rented":24.2,"no_car":31.6,"disabled":19.9,"language_not_english":22.1,"lone_parent":11.1,"claimant_count":595,"claimant_rate":6.2},"north_northants":{"population":359525,"households":148916,"hh_deprived_3plus":3.5,"no_quals":19.9,"level4_quals":26.7,"social_rented":15.2,"private_rented":18.4,"no_car":16.0,"disabled":17.3,"language_not_english":9.4,"lone_parent":7.0,"claimant_rate":3.3}},"data":"Pride in Place Corby - Deprivation Data Pack.xlsx (compiled Aug 2026): IMD 2025 ranks of 33,755 (1 = most deprived); Census 2021 by LSOA; claimant count Jul 2026."},"features":[{"type":"Feature","properties":{"layer":"lsoa","code":"E01026951","name":"North Northamptonshire 005C","short":"005C","label":"005C · Exeter (south)","exeter":true,"msoa":"E02005616","area_km2":0.249,"label_lon":-0.699523,"label_lat":52.481719,"imd_rank":5343,"la_rank":18,"income":6553,"employment":5984,"education":255,"health":6449,"crime":8720,"barriers":28929,"living_env":29961,"idaci":6311,"idaopi":10877,"imd_pct_most_deprived":15.8,"imd_decile":2,"population":1355,"households":515,"hh_deprived_3plus":7.8,"no_quals":32.4,"level4_quals":14.9,"social_rented":32.1,"private_rented":20.0,"no_car":31.5,"disabled":19.2,"language_not_english":21.8,"lone_parent":12.4,"claimant_count":55,"claimant_rate":5.9},"geometry":{"type":"Polygon","coordinates":[[[-0.696567,52.481601],[-0.695472,52.480749],[-0.694344,52.481028],[-0.693397,52.480548],[-0.692624,52.480765],[-0.691466,52.480455],[-0.691968,52.479063],[-0.69408,52.478908],[-0.698408,52.479243],[-0.699267,52.479378],[-0.704,52.480677],[-0.702636,52.481837],[-0.701375,52.482538],[-0.699373,52.483611],[-0.698582,52.48415],[-0.698417,52.484295],[-0.697587,52.484197],[-0.696289,52.482336],[-0.695758,52.482267],[-0.695594,52.481988],[-0.696567,52.481601]]]}},{"type":"Feature","properties":{"layer":"lsoa","code":"E01026959","name":"North Northamptonshire 007A","short":"007A","label":"007A","exeter":false,"msoa":"E02005617","area_km2":0.238,"label_lon":-0.724326,"label_lat":52.483663,"imd_rank":8127,"la_rank":37,"income":8319,"employment":8687,"education":2799,"health":6381,"crime":7135,"barriers":28658,"living_env":26099,"idaci":9266,"idaopi":13874,"imd_pct_most_deprived":24.1,"imd_decile":3,"population":1534,"hh_deprived_3plus":5.9,"no_quals":29.6,"level4_quals":16.2,"social_rented":21.3,"private_rented":24.8,"no_car":28.7,"disabled":18.6,"language_not_english":15.5,"lone_parent":8.7,"claimant_rate":5.9,"claimant_count":60},"geometry":{"type":"Polygon","coordinates":[[[-0.720992,52.486942],[-0.72051,52.486321],[-0.719584,52.486924],[-0.719036,52.486572],[-0.718341,52.486883],[-0.717918,52.486698],[-0.718297,52.485906],[-0.71906,52.485933],[-0.719295,52.48563],[-0.718846,52.485477],[-0.72012,52.485132],[-0.721707,52.484403],[-0.721778,52.484023],[-0.721297,52.483945],[-0.721558,52.483113],[-0.722218,52.483033],[-0.722143,52.482747],[-0.722396,52.481993],[-0.72194,52.48196],[-0.721724,52.481104],[-0.722716,52.481065],[-0.7244,52.480842],[-0.724739,52.481499],[-0.726096,52.481622],[-0.726846,52.482357],[-0.727008,52.482863],[-0.727179,52.483381],[-0.727641,52.484863],[-0.725974,52.485043],[-0.726183,52.486197],[-0.725374,52.486439],[-0.72361,52.486389],[-0.722768,52.486758],[-0.722218,52.486567],[-0.720992,52.486942]]]}},{"type":"Feature","properties":{"layer":"lsoa","code":"E01026960","name":"North Northamptonshire 007B","short":"007B","label":"007B","exeter":false,"msoa":"E02005617","area_km2":0.25,"label_lon":-0.706117,"label_lat":52.48453,"imd_rank":3980,"la_rank":11,"income":5438,"employment":5784,"education":352,"health":4435,"crime":2463,"barriers":30966,"living_env":18711,"idaci":5573,"idaopi":6374,"imd_pct_most_deprived":11.8,"imd_decile":2,"population":1589,"hh_deprived_3plus":9.7,"no_quals":35,"level4_quals":14.7,"social_rented":35.4,"private_rented":28.4,"no_car":40.3,"disabled":19,"language_not_english":29.3,"lone_parent":10.6,"claimant_rate":6.3,"claimant_count":75},"geometry":{"type":"Polygon","coordinates":[[[-0.704939,52.486465],[-0.697897,52.484943],[-0.69801,52.484765],[-0.698417,52.484295],[-0.698582,52.48415],[-0.699373,52.483611],[-0.699818,52.483837],[-0.704752,52.48407],[-0.704928,52.484078],[-0.707939,52.484111],[-0.709395,52.48351],[-0.711759,52.483127],[-0.71298,52.482888],[-0.714688,52.482444],[-0.714812,52.483978],[-0.713655,52.484784],[-0.708238,52.486218],[-0.705178,52.486144],[-0.704939,52.486465]]]}},{"type":"Feature","properties":{"layer":"lsoa","code":"E01026961","name":"North Northamptonshire 007C","short":"007C","label":"007C","exeter":false,"msoa":"E02005617","area_km2":0.396,"label_lon":-0.714628,"label_lat":52.485288,"imd_rank":5026,"la_rank":16,"income":6040,"employment":5529,"education":917,"health":4101,"crime":6573,"barriers":28980,"living_env":23406,"idaci":6981,"idaopi":8127,"imd_pct_most_deprived":14.9,"imd_decile":2,"population":1318,"hh_deprived_3plus":7.8,"no_quals":29.2,"level4_quals":14.5,"social_rented":27.3,"private_rented":25.1,"no_car":27.8,"disabled":21.9,"language_not_english":19.3,"lone_parent":13.1,"claimant_rate":6.2,"claimant_count":55},"geometry":{"type":"Polygon","coordinates":[[[-0.704939,52.486465],[-0.705178,52.486144],[-0.708238,52.486218],[-0.713655,52.484784],[-0.714812,52.483978],[-0.714688,52.482444],[-0.716457,52.482006],[-0.718065,52.481608],[-0.71826,52.481559],[-0.721724,52.481104],[-0.72194,52.48196],[-0.722396,52.481993],[-0.722143,52.482747],[-0.722218,52.483033],[-0.721558,52.483113],[-0.721297,52.483945],[-0.721778,52.484023],[-0.721707,52.484403],[-0.72012,52.485132],[-0.718846,52.485477],[-0.717916,52.485445],[-0.717666,52.48503],[-0.717175,52.485825],[-0.716629,52.486001],[-0.716677,52.487595],[-0.716613,52.48938],[-0.713821,52.488564],[-0.704939,52.486465]]]}},{"type":"Feature","properties":{"layer":"lsoa","code":"E01026965","name":"North Northamptonshire 007D","short":"007D","label":"007D","exeter":false,"msoa":"E02005617","area_km2":0.232,"label_lon":-0.71655,"label_lat":52.479148,"imd_rank":3196,"la_rank":9,"income":3886,"employment":3551,"education":265,"health":5099,"crime":2081,"barriers":25346,"living_env":30616,"idaci":5381,"idaopi":5603,"imd_pct_most_deprived":9.5,"imd_decile":1,"population":1613,"hh_deprived_3plus":8.3,"no_quals":35,"level4_quals":16.2,"social_rented":32.6,"private_rented":30.4,"no_car":34.5,"disabled":18.8,"language_not_english":28.8,"lone_parent":12.7,"claimant_rate":7.2,"claimant_count":80},"geometry":{"type":"Polygon","coordinates":[[[-0.712341,52.478607],[-0.713479,52.478286],[-0.71399,52.477846],[-0.71464,52.477898],[-0.714347,52.477623],[-0.715591,52.477071],[-0.71715,52.47648],[-0.717383,52.476103],[-0.717613,52.476285],[-0.71797,52.476106],[-0.718388,52.476041],[-0.718586,52.476534],[-0.717671,52.476735],[-0.718376,52.478415],[-0.718619,52.478652],[-0.719301,52.478584],[-0.719644,52.477608],[-0.721024,52.477839],[-0.721677,52.478527],[-0.721475,52.478897],[-0.719481,52.479398],[-0.719627,52.479744],[-0.719289,52.480978],[-0.717722,52.481302],[-0.718065,52.481608],[-0.716457,52.482006],[-0.714688,52.482444],[-0.714136,52.482459],[-0.713412,52.480667],[-0.712341,52.478607]]]}},{"type":"Feature","properties":{"layer":"lsoa","code":"E01026966","name":"North Northamptonshire 007E","short":"007E","label":"007E","exeter":false,"msoa":"E02005617","area_km2":0.714,"label_lon":-0.725807,"label_lat":52.476188,"imd_rank":7266,"la_rank":31,"income":8179,"employment":6061,"education":2589,"health":8615,"crime":6042,"barriers":26341,"living_env":22863,"idaci":6572,"idaopi":17299,"imd_pct_most_deprived":21.5,"imd_decile":3,"population":1489,"hh_deprived_3plus":5.9,"no_quals":24.2,"level4_quals":22.9,"social_rented":22.8,"private_rented":13.7,"no_car":23,"disabled":20.5,"language_not_english":11.5,"lone_parent":9.9,"claimant_rate":6.8,"claimant_count":60},"geometry":{"type":"Polygon","coordinates":[[[-0.721024,52.477839],[-0.719644,52.477608],[-0.719301,52.478584],[-0.718619,52.478652],[-0.718376,52.478415],[-0.717671,52.476735],[-0.718586,52.476534],[-0.719463,52.475843],[-0.720527,52.475337],[-0.722181,52.475166],[-0.721921,52.473973],[-0.72246,52.473276],[-0.722215,52.472884],[-0.721578,52.472232],[-0.720308,52.472553],[-0.720246,52.47225],[-0.723193,52.470645],[-0.723439,52.470771],[-0.725734,52.471922],[-0.72767,52.472876],[-0.729491,52.473706],[-0.730212,52.474018],[-0.733053,52.475201],[-0.731234,52.47908],[-0.730596,52.479823],[-0.728816,52.479931],[-0.72532,52.480609],[-0.7244,52.480842],[-0.722716,52.481065],[-0.721724,52.481104],[-0.71826,52.481559],[-0.718065,52.481608],[-0.717722,52.481302],[-0.719289,52.480978],[-0.719627,52.479744],[-0.719481,52.479398],[-0.721475,52.478897],[-0.721677,52.478527],[-0.721024,52.477839]]]}},{"type":"Feature","properties":{"layer":"lsoa","code":"E01026967","name":"North Northamptonshire 007F","short":"007F","label":"007F","exeter":false,"msoa":"E02005617","area_km2":0.375,"label_lon":-0.708451,"label_lat":52.481342,"imd_rank":8430,"la_rank":39,"income":9442,"employment":8601,"education":3059,"health":7356,"crime":5587,"barriers":27412,"living_env":25973,"idaci":10286,"idaopi":12591,"imd_pct_most_deprived":25.0,"imd_decile":3,"population":1853,"hh_deprived_3plus":6.6,"no_quals":29.7,"level4_quals":18.5,"social_rented":23.5,"private_rented":22.7,"no_car":24,"disabled":18.3,"language_not_english":22.7,"lone_parent":9.4,"claimant_rate":4.9,"claimant_count":60},"geometry":{"type":"Polygon","coordinates":[[[-0.701375,52.482538],[-0.702636,52.481837],[-0.704,52.480677],[-0.704676,52.480147],[-0.706547,52.478979],[-0.709975,52.477676],[-0.710345,52.478435],[-0.711348,52.479371],[-0.711968,52.480847],[-0.713412,52.480667],[-0.714136,52.482459],[-0.714688,52.482444],[-0.71298,52.482888],[-0.711759,52.483127],[-0.709395,52.48351],[-0.707939,52.484111],[-0.704928,52.484078],[-0.704752,52.48407],[-0.699818,52.483837],[-0.699373,52.483611],[-0.701375,52.482538]]]}},{"type":"Feature","properties":{"layer":"lsoa","code":"E01026968","name":"North Northamptonshire 007G","short":"007G","label":"007G","exeter":false,"msoa":"E02005617","area_km2":0.264,"label_lon":-0.713983,"label_lat":52.476803,"imd_rank":1264,"la_rank":1,"income":1840,"employment":1905,"education":100,"health":2133,"crime":941,"barriers":20205,"living_env":22964,"idaci":2184,"idaopi":6075,"imd_pct_most_deprived":3.7,"imd_decile":1,"population":1790,"hh_deprived_3plus":12.3,"no_quals":34.9,"level4_quals":14.9,"social_rented":44.1,"private_rented":26.6,"no_car":40,"disabled":22,"language_not_english":23,"lone_parent":13.4,"claimant_rate":7.0,"claimant_count":80},"geometry":{"type":"Polygon","coordinates":[[[-0.710345,52.478435],[-0.709975,52.477676],[-0.710668,52.477393],[-0.713749,52.475571],[-0.714582,52.475032],[-0.715392,52.474515],[-0.716848,52.473632],[-0.71772,52.473013],[-0.720246,52.47225],[-0.720308,52.472553],[-0.721578,52.472232],[-0.722215,52.472884],[-0.72246,52.473276],[-0.721921,52.473973],[-0.722181,52.475166],[-0.720527,52.475337],[-0.719463,52.475843],[-0.718586,52.476534],[-0.718388,52.476041],[-0.71797,52.476106],[-0.717613,52.476285],[-0.717383,52.476103],[-0.71715,52.47648],[-0.715591,52.477071],[-0.714347,52.477623],[-0.71464,52.477898],[-0.71399,52.477846],[-0.713479,52.478286],[-0.712341,52.478607],[-0.713412,52.480667],[-0.711968,52.480847],[-0.711348,52.479371],[-0.710345,52.478435]]]}},{"type":"Feature","properties":{"layer":"lsoa","code":"E01026950","name":"North Northamptonshire 005B","short":"005B","label":"005B · Exeter (north, incl. Burghley Drive)","exeter":true,"msoa":"E02005616","area_km2":0.346,"label_lon":-0.693907,"label_lat":52.484854,"imd_rank":3530,"la_rank":10,"income":4657,"employment":4129,"education":796,"health":3544,"crime":2102,"barriers":28832,"living_env":20046,"idaci":8066,"idaopi":4480,"imd_pct_most_deprived":10.5,"imd_decile":2,"population":1634,"households":641,"hh_deprived_3plus":9.8,"no_quals":33.4,"level4_quals":13.9,"social_rented":31.6,"private_rented":25.8,"no_car":34.0,"disabled":20.9,"language_not_english":25.4,"lone_parent":10.5,"claimant_count":70,"claimant_rate":6.2},"geometry":{"type":"Polygon","coordinates":[[[-0.698609,52.488415],[-0.697811,52.487889],[-0.696446,52.488261],[-0.696292,52.487767],[-0.695174,52.487941],[-0.695013,52.487348],[-0.694774,52.486814],[-0.692032,52.487009],[-0.692707,52.485756],[-0.689156,52.486766],[-0.690734,52.482481],[-0.691466,52.480455],[-0.692624,52.480765],[-0.693397,52.480548],[-0.694344,52.481028],[-0.695472,52.480749],[-0.696567,52.481601],[-0.695594,52.481988],[-0.695758,52.482267],[-0.696289,52.482336],[-0.697587,52.484197],[-0.698417,52.484295],[-0.69801,52.484765],[-0.697897,52.484943],[-0.697023,52.485368],[-0.697092,52.485734],[-0.697918,52.485472],[-0.698653,52.485857],[-0.698135,52.486214],[-0.697662,52.486109],[-0.697643,52.486553],[-0.699264,52.487388],[-0.699353,52.489347],[-0.699161,52.48939],[-0.699258,52.489086],[-0.698482,52.489055],[-0.698609,52.488415]]]}},{"type":"Feature","properties":{"layer":"boundary","code":"PIP-KHLE","name":"Kingswood, Hazel Leys & Exeter","label":"Pride in Place boundary: MSOA E02005617 + Exeter LSOAs E01026951 and E01026950","area_km2":3.064,"lsoa_count":9,"population":14178,"households":5519,"hh_deprived_3plus":8.3,"no_quals":31.6,"level4_quals":16.3,"social_rented":30.2,"private_rented":24.2,"no_car":31.6,"disabled":19.9,"language_not_english":22.1,"lone_parent":11.1,"claimant_count":595,"claimant_rate":6.2},"geometry":{"type":"Polygon","coordinates":[[[-0.704676,52.480147],[-0.706547,52.478979],[-0.709975,52.477676],[-0.710668,52.477393],[-0.713749,52.475571],[-0.714582,52.475032],[-0.715392,52.474515],[-0.716848,52.473632],[-0.71772,52.473013],[-0.720246,52.47225],[-0.723193,52.470645],[-0.723439,52.470771],[-0.725734,52.471922],[-0.72767,52.472876],[-0.729491,52.473706],[-0.730212,52.474018],[-0.733053,52.475201],[-0.731234,52.47908],[-0.730596,52.479823],[-0.728816,52.479931],[-0.72532,52.480609],[-0.7244,52.480842],[-0.724739,52.481499],[-0.726096,52.481622],[-0.726846,52.482357],[-0.727008,52.482863],[-0.727179,52.483381],[-0.727641,52.484863],[-0.725974,52.485043],[-0.726183,52.486197],[-0.725374,52.486439],[-0.72361,52.486389],[-0.722768,52.486758],[-0.722218,52.486567],[-0.720992,52.486942],[-0.72051,52.486321],[-0.719584,52.486924],[-0.719036,52.486572],[-0.718341,52.486883],[-0.717918,52.486698],[-0.718297,52.485906],[-0.71906,52.485933],[-0.719295,52.48563],[-0.718846,52.485477],[-0.717916,52.485445],[-0.717666,52.48503],[-0.717175,52.485825],[-0.716629,52.486001],[-0.716677,52.487595],[-0.716613,52.48938],[-0.713821,52.488564],[-0.704939,52.486465],[-0.697897,52.484943],[-0.697023,52.485368],[-0.697092,52.485734],[-0.697918,52.485472],[-0.698653,52.485857],[-0.698135,52.486214],[-0.697662,52.486109],[-0.697643,52.486553],[-0.699264,52.487388],[-0.699353,52.489347],[-0.699161,52.48939],[-0.699258,52.489086],[-0.698482,52.489055],[-0.698609,52.488415],[-0.697811,52.487889],[-0.696446,52.488261],[-0.696292,52.487767],[-0.695174,52.487941],[-0.695013,52.487348],[-0.694774,52.486814],[-0.692032,52.487009],[-0.692707,52.485756],[-0.689156,52.486766],[-0.690734,52.482481],[-0.691466,52.480455],[-0.691968,52.479063],[-0.69408,52.478908],[-0.698408,52.479243],[-0.699267,52.479378],[-0.704,52.480677],[-0.704676,52.480147]]]}},{"type":"Feature","properties":{"layer":"msoa","code":"E02005617","name":"North Northamptonshire 007","label":"Published MSOA E02005617 (Kingswood and Hazel Leys, without Exeter)","area_km2":2.468,"population":11189,"households":4363},"geometry":{"type":"Polygon","coordinates":[[[-0.697897,52.484943],[-0.69801,52.484765],[-0.698417,52.484295],[-0.698582,52.48415],[-0.699373,52.483611],[-0.701375,52.482538],[-0.702636,52.481837],[-0.704,52.480677],[-0.704676,52.480147],[-0.706547,52.478979],[-0.709975,52.477676],[-0.710668,52.477393],[-0.713749,52.475571],[-0.714582,52.475032],[-0.715392,52.474515],[-0.716848,52.473632],[-0.71772,52.473013],[-0.720246,52.47225],[-0.723193,52.470645],[-0.723439,52.470771],[-0.725734,52.471922],[-0.72767,52.472876],[-0.729491,52.473706],[-0.730212,52.474018],[-0.733053,52.475201],[-0.731234,52.47908],[-0.730596,52.479823],[-0.728816,52.479931],[-0.72532,52.480609],[-0.7244,52.480842],[-0.724739,52.481499],[-0.726096,52.481622],[-0.726846,52.482357],[-0.727008,52.482863],[-0.727179,52.483381],[-0.727641,52.484863],[-0.725974,52.485043],[-0.726183,52.486197],[-0.725374,52.486439],[-0.72361,52.486389],[-0.722768,52.486758],[-0.722218,52.486567],[-0.720992,52.486942],[-0.72051,52.486321],[-0.719584,52.486924],[-0.719036,52.486572],[-0.718341,52.486883],[-0.717918,52.486698],[-0.718297,52.485906],[-0.71906,52.485933],[-0.719295,52.48563],[-0.718846,52.485477],[-0.717916,52.485445],[-0.717666,52.48503],[-0.717175,52.485825],[-0.716629,52.486001],[-0.716677,52.487595],[-0.716613,52.48938],[-0.713821,52.488564],[-0.704939,52.486465],[-0.697897,52.484943]]]}},{"type":"Feature","properties":{"layer":"school","name":"Kingswood Secondary Academy","urn":"139957","address":"Gainsborough Rd, NN18 9BY","pupils":1226,"fsm6":32.97,"fsm6_england":28.9,"eal":23.3,"sen_support":11.91,"ehcp":2.77,"absence":9.3,"persistent_absence":27.22,"persistent_absence_england":23.37,"attainment":"Attainment 8: 42.9 (England 46.1); Grade 5+ English & maths: 34.3% (England 45.4%)"},"geometry":{"type":"Point","coordinates":[-0.73336,52.479351]}},{"type":"Feature","properties":{"layer":"school","name":"Kingswood Primary Academy","urn":"139325","address":"Southbrook, NN18 9BE","pupils":211,"fsm6":46.45,"fsm6_england":26.3,"eal":25.1,"sen_support":14.22,"ehcp":6.64,"absence":5.29,"persistent_absence":13.04,"persistent_absence_england":12.99,"attainment":"KS2 RWM expected standard: 54% (England 62%)"},"geometry":{"type":"Point","coordinates":[-0.719249,52.477851]}},{"type":"Feature","properties":{"layer":"school","name":"Hazel Leys Academy","urn":"141982","address":"Gainsborough Rd, NN18 0QF","pupils":227,"fsm6":30.88,"fsm6_england":26.3,"eal":45.4,"sen_support":14.98,"ehcp":3.08,"absence":6.27,"persistent_absence":17.02,"persistent_absence_england":12.99,"attainment":"KS2 RWM expected standard: 64% (England 62%)"},"geometry":{"type":"Point","coordinates":[-0.71257,52.481857]}},{"type":"Feature","properties":{"layer":"school","name":"Exeter A Learning Community Academy","urn":"146827","address":"Brayford Avenue, NN18 8DL (street location)","pupils":479,"fsm6":45.54,"fsm6_england":26.3,"eal":38.8,"sen_support":18.58,"ehcp":6.68,"absence":6.92,"persistent_absence":21.3,"persistent_absence_england":12.99,"attainment":"KS2 RWM expected standard: 35% (England 62%)"},"geometry":{"type":"Point","coordinates":[-0.695608,52.483733]}}]};
+
+// ---- Indicators ------------------------------------------------------------
+const N = 33755;
+const RANK_BINS = [1, 3, 5, 10, 20, 50];            // % of England more deprived
+const RANK_COLOURS = ["#3b0f4f", "#6a1b5d", "#9c2a5f", "#c9485a", "#e5785c", "#f2ad7f", "#f8dfc8"];
+const PCT_COLOURS = ["#f8dfc8", "#f2ad7f", "#e5785c", "#c9485a", "#8a2160"]; // low → high (worse)
+
+const IND = [
+  { group: "Indices of Deprivation 2025 (rank of 33,755)", items: [
+    { key: "imd_rank", name: "IMD 2025 — overall", type: "rank" },
+    { key: "income", name: "Income", type: "rank" },
+    { key: "employment", name: "Employment", type: "rank" },
+    { key: "education", name: "Education, skills & training", type: "rank" },
+    { key: "health", name: "Health & disability", type: "rank" },
+    { key: "crime", name: "Crime", type: "rank" },
+    { key: "barriers", name: "Barriers to housing & services", type: "rank" },
+    { key: "living_env", name: "Living environment", type: "rank" },
+    { key: "idaci", name: "Children in income-deprived families (IDACI)", type: "rank" },
+    { key: "idaopi", name: "Older people in income deprivation (IDAOPI)", type: "rank" },
+  ]},
+  { group: "Census 2021 and claimant count (%)", items: [
+    { key: "claimant_rate", name: "Claimant rate, July 2026 (% of 16–64)", type: "pct", cmp: [6.2, 3.3, 4.0], approxArea: true },
+    { key: "hh_deprived_3plus", name: "Households deprived in 3+ dimensions", type: "pct", cmp: [8.3, 3.5, 3.9] },
+    { key: "no_quals", name: "No qualifications (16+)", type: "pct", cmp: [31.6, 19.9, 18.1] },
+    { key: "level4_quals", name: "Degree-level (Level 4+) qualifications", type: "pct", cmp: [16.3, 26.7, 33.9], higherBetter: true },
+    { key: "social_rented", name: "Social rented households", type: "pct", cmp: [30.2, 15.2, 17.1] },
+    { key: "private_rented", name: "Private rented households", type: "pct", cmp: [24.2, 18.4, 20.5] },
+    { key: "no_car", name: "Households with no car or van", type: "pct", cmp: [31.6, 16.0, 23.5] },
+    { key: "disabled", name: "Disabled under the Equality Act", type: "pct", cmp: [19.9, 17.3, 17.3] },
+    { key: "lone_parent", name: "Lone parents with dependent children", type: "pct", cmp: [11.1, 7.0, 6.9] },
+    { key: "language_not_english", name: "Main language not English (3+)", type: "pct", cmp: [22.1, 9.4, 9.2] },
+  ]},
+];
+const ALL = IND.flatMap(g => g.items);
+const byKey = Object.fromEntries(ALL.map(i => [i.key, i]));
+
+const areas = DATA.features.filter(f => f.properties.layer === "lsoa");
+const fmt = n => n == null ? "—" : n.toLocaleString("en-GB");
+const pctOf = r => r / N * 100;
+const pctLabel = p => p < 1 ? p.toFixed(1) + "%" : (p < 10 ? p.toFixed(1) : Math.round(p)) + "%";
+
+function rankClass(r) { const p = pctOf(r); let i = 0; while (i < RANK_BINS.length && p > RANK_BINS[i]) i++; return i; }
+function pctBreaks(ind) {
+  const vals = areas.map(f => f.properties[ind.key]).filter(v => v != null);
+  const lo = Math.min(...vals), hi = Math.max(...vals);
+  const step = (hi - lo) / PCT_COLOURS.length || 1;
+  return Array.from({ length: PCT_COLOURS.length - 1 }, (_, i) => +(lo + step * (i + 1)).toFixed(1)).concat([hi]).map((b, i, a) => i === a.length - 1 ? Infinity : b);
+}
+function colourFor(ind, v) {
+  if (v == null) return null;
+  if (ind.type === "rank") return RANK_COLOURS[rankClass(v)];
+  const br = pctBreaks(ind); let i = 0; while (v > br[i]) i++;
+  return ind.higherBetter ? PCT_COLOURS[PCT_COLOURS.length - 1 - i] : PCT_COLOURS[i];
+}
+function valueText(ind, v) {
+  if (v == null) return "no data";
+  return ind.type === "rank" ? fmt(v) : v.toFixed(1) + "%";
+}
+function subText(ind, v) {
+  if (v == null) return "not in Census sheet";
+  return ind.type === "rank" ? "most deprived " + pctLabel(pctOf(v)) : "";
+}
+// worse first
+function severity(ind, v) { if (v == null) return Infinity; if (ind.type === "rank") return v; return ind.higherBetter ? v : -v; }
+
+// ---- Panel ------------------------------------------------------------------
+const sel = document.getElementById("ind");
+IND.forEach(g => {
+  const og = document.createElement("optgroup"); og.label = g.group;
+  g.items.forEach(i => { const o = document.createElement("option"); o.value = i.key; o.textContent = i.name; og.appendChild(o); });
+  sel.appendChild(og);
+});
+let current = "imd_rank";
+try { const s = localStorage.getItem("pip_ind"); if (s && byKey[s]) current = s; } catch (e) {}
+sel.value = current;
+
+function showMsoa() { return document.getElementById("t-msoa").checked; }
+
+function renderLegend(ind) {
+  const ramp = document.getElementById("ramp"), ticks = document.getElementById("ticks");
+  ramp.innerHTML = ""; ticks.innerHTML = "";
+  if (ind.type === "rank") {
+    RANK_COLOURS.forEach(c => { const s = document.createElement("span"); s.style.background = c; ramp.appendChild(s); });
+    ["≤1%", "1–3%", "3–5%", "5–10%", "10–20%", "20–50%", ">50%"].forEach(t => { const s = document.createElement("span"); s.textContent = t; ticks.appendChild(s); });
+    document.getElementById("ind-note").textContent = "Coloured by the share of England's 33,755 LSOAs that are more deprived. Rank 1 is the most deprived in England.";
+  } else {
+    const br = pctBreaks(ind);
+    const vals = areas.map(f => f.properties[ind.key]).filter(v => v != null);
+    const lo = Math.min(...vals);
+    const cols = ind.higherBetter ? [...PCT_COLOURS].reverse() : PCT_COLOURS;
+    cols.forEach(c => { const s = document.createElement("span"); s.style.background = c; ramp.appendChild(s); });
+    br.forEach((b, i) => { const s = document.createElement("span"); const from = i === 0 ? lo : br[i - 1]; s.textContent = i === br.length - 1 ? "≥" + from.toFixed(1) : from.toFixed(1) + "–" + b.toFixed(1); ticks.appendChild(s); });
+    document.getElementById("ind-note").textContent = "Five equal bands across the nine LSOAs." + (ind.higherBetter ? " Fewer degree-level qualifications shows darker." : "");
+  }
+}
+
+function renderList(ind) {
+  const list = document.getElementById("list"); list.innerHTML = "";
+  const rows = areas.slice().sort((a, b) => severity(ind, a.properties[ind.key]) - severity(ind, b.properties[ind.key]));
+  const vals = rows.map(f => f.properties[ind.key]).filter(v => v != null);
+  const max = Math.max(...vals);
+  rows.forEach(f => {
+    const p = f.properties, v = p[ind.key];
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "row"; b.setAttribute("role", "listitem"); b.dataset.code = p.code;
+    const sw = document.createElement("i"); sw.className = "sw" + (v == null ? " x" : ""); if (v != null) sw.style.background = colourFor(ind, v);
+    const id = document.createElement("span"); id.className = "id"; id.textContent = p.short;
+    const bar = document.createElement("span"); bar.className = "bar"; const fill = document.createElement("i");
+    fill.style.width = v == null ? "0" : (ind.type === "rank" ? Math.max(4, (1 - v / N) * 100) : (v / max) * 100) + "%";
+    bar.appendChild(fill);
+    const val = document.createElement("span"); val.className = "val"; val.textContent = valueText(ind, v);
+    const sm = document.createElement("small"); sm.textContent = subText(ind, v); val.appendChild(sm);
+    b.append(sw, id, bar, val);
+    b.addEventListener("click", () => focusArea(p.code));
+    b.addEventListener("mouseenter", () => setHover(p.code));
+    b.addEventListener("mouseleave", () => setHover(null));
+    list.appendChild(b);
+  });
+  document.getElementById("list-h").textContent = ind.type === "rank" ? "Ranked, most deprived first" : (ind.higherBetter ? "Lowest share first" : "Highest share first");
+  const cmp = document.getElementById("cmp");
+  cmp.innerHTML = "";
+  if (ind.cmp) {
+    [["Pride in Place area", ind.cmp[0]], ["North Northants", ind.cmp[1]], ["England", ind.cmp[2]]].forEach(([k, v], i) => {
+      const s = document.createElement("span"); s.innerHTML = k + " <b></b>"; s.querySelector("b").textContent = (i === 0 && ind.approxArea ? "≈" : "") + v.toFixed(1) + "%"; cmp.appendChild(s);
+    });
+  } else {
+    const s = document.createElement("span"); s.textContent = "007G is the most deprived LSOA in North Northamptonshire (1st of 205)."; cmp.appendChild(s);
+  }
+}
+
+function update() {
+  const ind = byKey[current];
+  renderLegend(ind); renderList(ind);
+  try { localStorage.setItem("pip_ind", current); } catch (e) {}
+  if (map && map.isStyleLoaded() && map.getSource("areas")) applyStyle();
+}
+sel.addEventListener("change", () => { current = sel.value; update(); });
+
+// ---- Map --------------------------------------------------------------------
+let map = null, hoverCode = null, popup = null, labelMarkers = [];
+const STYLES = { light: "mapbox://styles/mapbox/light-v11", dark: "mapbox://styles/mapbox/dark-v11", streets: "mapbox://styles/mapbox/streets-v12", satellite: "mapbox://styles/mapbox/satellite-streets-v12" };
+const prefersDark = () => { const t = document.documentElement.dataset.theme; return t ? t === "dark" : matchMedia("(prefers-color-scheme: dark)").matches; };
+let basemap = "light";
+const styleUrl = () => basemap === "light" ? (prefersDark() ? STYLES.dark : STYLES.light) : STYLES[basemap];
+const darkLabels = () => basemap === "satellite" || (basemap === "light" && prefersDark());
+
+function getToken() {
+  if (MAPBOX_TOKEN && MAPBOX_TOKEN.startsWith("pk.")) return MAPBOX_TOKEN;
+  try { const t = localStorage.getItem("pip_mapbox_token"); if (t && t.startsWith("pk.")) return t; } catch (e) {}
+  return null;
+}
+function askToken(msg) {
+  const box = document.getElementById("token"); box.hidden = false;
+  const err = document.getElementById("token-err"); err.hidden = !msg; err.textContent = msg || "";
+}
+document.getElementById("token-form").addEventListener("submit", e => {
+  e.preventDefault();
+  const v = document.getElementById("token-in").value.trim();
+  if (!v.startsWith("pk.")) { askToken("That doesn't look like a public token. Public tokens start with pk."); return; }
+  try { localStorage.setItem("pip_mapbox_token", v); } catch (e2) {}
+  document.getElementById("token").hidden = true;
+  startMap(v);
+});
+
+function stripePattern(hex) {
+  const s = 12, c = document.createElement("canvas"); c.width = c.height = s; const g = c.getContext("2d");
+  g.strokeStyle = hex; g.lineWidth = 3;
+  for (let o = -s; o <= s; o += 6) { g.beginPath(); g.moveTo(o, s); g.lineTo(o + s, 0); g.stroke(); }
+  return g.getImageData(0, 0, s, s);
+}
+
+function bboxOf(geom) {
+  let x0 = 180, y0 = 90, x1 = -180, y1 = -90;
+  geom.coordinates.flat(1).forEach(([x, y]) => { x0 = Math.min(x0, x); y0 = Math.min(y0, y); x1 = Math.max(x1, x); y1 = Math.max(y1, y); });
+  return [[x0, y0], [x1, y1]];
+}
+function allBounds() {
+  const fs = DATA.features.filter(f => f.properties.layer === "boundary");
+  const bs = fs.map(f => bboxOf(f.geometry));
+  return [[Math.min(...bs.map(b => b[0][0])), Math.min(...bs.map(b => b[0][1]))], [Math.max(...bs.map(b => b[1][0])), Math.max(...bs.map(b => b[1][1]))]];
+}
+
+function startMap(token) {
+  if (typeof mapboxgl === "undefined") { askToken("Mapbox GL JS didn't load. Check your internet connection and reload."); return; }
+  mapboxgl.accessToken = token;
+  map = new mapboxgl.Map({ container: "map", style: styleUrl(), bounds: allBounds(), fitBoundsOptions: { padding: 40 }, attributionControl: true, cooperativeGestures: false });
+  map.addControl(new mapboxgl.NavigationControl({ visualizePitch: false }), "top-right");
+  map.addControl(new mapboxgl.ScaleControl({ unit: "metric" }), "bottom-right");
+  map.addControl(new mapboxgl.FullscreenControl(), "top-right");
+  map.on("error", e => {
+    const st = e && e.error && (e.error.status || (e.error.message || "").match(/40[13]/));
+    if (st) { try { localStorage.removeItem("pip_mapbox_token"); } catch (x) {} map.remove(); map = null; askToken("Mapbox refused that token (it may be wrong, expired or restricted to other websites). Paste a token that allows this page."); }
+  });
+  map.on("style.load", addLayers);
+  map.on("mousemove", "area-fill", e => { map.getCanvas().style.cursor = "pointer"; setHover(e.features[0].properties.code); });
+  map.on("mouseleave", "area-fill", () => { map.getCanvas().style.cursor = ""; setHover(null); });
+  map.on("click", "area-fill", e => openPopup(e.features[0].properties.code, e.lngLat));
+  map.on("mouseenter", "schools", () => map.getCanvas().style.cursor = "pointer");
+  map.on("mouseleave", "schools", () => map.getCanvas().style.cursor = "");
+  map.on("click", "schools", e => schoolPopup(e.features[0]));
+}
+
+function addLayers() {
+  const areaFC = { type: "FeatureCollection", features: areas };
+  const msoa = { type: "FeatureCollection", features: DATA.features.filter(f => f.properties.layer === "msoa") };
+  const boundary = { type: "FeatureCollection", features: DATA.features.filter(f => f.properties.layer === "boundary") };
+  const schools = { type: "FeatureCollection", features: DATA.features.filter(f => f.properties.layer === "school") };
+  map.addSource("areas", { type: "geojson", data: areaFC, promoteId: "code" });
+  map.addSource("msoa", { type: "geojson", data: msoa });
+  map.addSource("schools", { type: "geojson", data: schools });
+  map.addSource("boundary", { type: "geojson", data: boundary });
+  const before = map.getLayer("road-label") ? "road-label" : (map.getLayer("road-label-simple") ? "road-label-simple" : undefined);
+  map.addLayer({ id: "area-fill", type: "fill", source: "areas", paint: { "fill-color": "#ccc", "fill-opacity": 0.78 } }, before);
+  map.addLayer({ id: "area-line", type: "line", source: "areas", paint: { "line-color": "#ffffff", "line-width": 1.2, "line-opacity": 0.9 } }, before);
+  map.addLayer({ id: "msoa-line", type: "line", source: "msoa", layout: { visibility: "none" }, paint: { "line-color": "#5b6470", "line-width": 2.5, "line-dasharray": [0.6, 1.6] } });
+  map.addLayer({ id: "boundary-halo", type: "line", source: "boundary", paint: { "line-color": "#ffffff", "line-width": 6, "line-opacity": 0.85 } });
+  map.addLayer({ id: "boundary-line", type: "line", source: "boundary", paint: { "line-color": "#141a21", "line-width": 3 } });
+  map.addLayer({ id: "area-hover", type: "line", source: "areas", paint: { "line-color": "#1f6feb", "line-width": ["case", ["boolean", ["feature-state", "hover"], false], 3.5, 0] } });
+  map.addLayer({ id: "schools", type: "circle", source: "schools", paint: { "circle-radius": 6.5, "circle-color": "#ffffff", "circle-stroke-color": "#33465c", "circle-stroke-width": 3 } });
+  applyStyle(); applyToggles();
+}
+
+function applyStyle() {
+  const ind = byKey[current];
+  const match = ["match", ["get", "code"]];
+  areas.forEach(f => { const c = colourFor(ind, f.properties[ind.key]); match.push(f.properties.code, c || "rgba(0,0,0,0)"); });
+  match.push("#cccccc");
+  map.setPaintProperty("area-fill", "fill-color", match);
+  drawLabels();
+}
+
+function drawLabels() {
+  labelMarkers.forEach(m => m.remove()); labelMarkers = [];
+  if (!map || !document.getElementById("t-labels").checked) return;
+  const ind = byKey[current];
+  areas.forEach(f => {
+    const p = f.properties;
+    const el = document.createElement("div");
+    el.className = "lbl" + (darkLabels() ? " dark" : "");
+    el.textContent = p.short;
+    const sm = document.createElement("small"); sm.textContent = valueText(ind, p[ind.key]); el.appendChild(sm);
+    labelMarkers.push(new mapboxgl.Marker({ element: el }).setLngLat([p.label_lon, p.label_lat]).addTo(map));
+  });
+}
+
+function applyToggles() {
+  if (!map || !map.getLayer("area-fill")) return;
+  map.setLayoutProperty("msoa-line", "visibility", showMsoa() ? "visible" : "none");
+  map.setLayoutProperty("schools", "visibility", document.getElementById("t-schools").checked ? "visible" : "none");
+  drawLabels();
+}
+["t-msoa", "t-schools", "t-labels"].forEach(id => document.getElementById(id).addEventListener("change", () => { applyToggles(); renderList(byKey[current]); }));
+
+document.querySelectorAll(".seg button").forEach(b => b.addEventListener("click", () => {
+  basemap = b.dataset.style;
+  document.querySelectorAll(".seg button").forEach(x => x.setAttribute("aria-pressed", String(x === b)));
+  if (map) { labelMarkers.forEach(m => m.remove()); map.setStyle(styleUrl()); }
+}));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => { if (map && basemap === "light") map.setStyle(styleUrl()); });
+
+function setHover(code) {
+  if (!map || !map.getSource("areas")) return;
+  if (hoverCode) map.setFeatureState({ source: "areas", id: hoverCode }, { hover: false });
+  hoverCode = code;
+  if (code) map.setFeatureState({ source: "areas", id: code }, { hover: true });
+  document.querySelectorAll(".row").forEach(r => r.classList.toggle("on", r.dataset.code === code));
+}
+
+function focusArea(code) {
+  const f = areas.find(a => a.properties.code === code); if (!f || !map) return;
+  map.fitBounds(bboxOf(f.geometry), { padding: 80, maxZoom: 16, duration: matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 900 });
+  const p = f.properties; openPopup(code, [p.label_lon, p.label_lat]);
+}
+
+function rankCell(v) { return v == null ? "—" : fmt(v) + " · " + pctLabel(pctOf(v)); }
+function openPopup(code, lngLat) {
+  const p = areas.find(a => a.properties.code === code).properties;
+  const t = document.createElement("div"); t.className = "pop";
+  const h = document.createElement("h3"); h.textContent = p.exeter ? p.label : p.short; t.appendChild(h);
+  const sub = document.createElement("div"); sub.className = "sub"; sub.textContent = p.name + " · " + p.code + " · " + p.area_km2.toFixed(2) + " km²"; t.appendChild(sub);
+  if (p.exeter) { const fl = document.createElement("div"); fl.className = "flag"; fl.textContent = "Exeter estate: inside this Pride in Place boundary but outside the published MSOA E02005617 (it sits in E02005616). Census figures added from Nomis, Oct 2026" + (p.code === "E01026950" ? "; IMD ranks from the MHCLG Local Deprivation Explorer." : "."); t.appendChild(fl); }
+  const tb = document.createElement("table");
+  const add = (k, v, hi) => { const tr = tb.insertRow(); if (hi) tr.className = "hi"; tr.insertCell().textContent = k; tr.insertCell().textContent = v; };
+  const grp = k => { const tr = tb.insertRow(); tr.className = "grp"; const c = tr.insertCell(); c.colSpan = 2; c.textContent = k; };
+  grp("IMD 2025 rank · most deprived %");
+  IND[0].items.forEach(i => add(i.name.replace(/ \(.*\)/, "").replace("IMD 2025 — overall", "Overall IMD"), rankCell(p[i.key]), i.key === current));
+  add("Rank in North Northants (of 205)", fmt(p.la_rank), false);
+  if (p.population != null) {
+    grp("Census 2021 · claimant count");
+    add("Population", fmt(p.population), false);
+    IND[1].items.forEach(i => add(i.name, p[i.key] == null ? "—" : p[i.key].toFixed(1) + "%", i.key === current));
+  }
+  t.appendChild(tb);
+  if (popup) popup.remove();
+  popup = new mapboxgl.Popup({ maxWidth: "330px", focusAfterOpen: false }).setLngLat(lngLat).setDOMContent(t).addTo(map);
+}
+
+function schoolPopup(f) {
+  const p = f.properties;
+  const t = document.createElement("div"); t.className = "pop";
+  const h = document.createElement("h3"); h.textContent = p.name; t.appendChild(h);
+  const sub = document.createElement("div"); sub.className = "sub"; sub.textContent = "URN " + p.urn + " · " + p.address; t.appendChild(sub);
+  const tb = document.createElement("table");
+  const add = (k, v) => { const tr = tb.insertRow(); tr.insertCell().textContent = k; tr.insertCell().textContent = v; };
+  add("Pupils", fmt(p.pupils));
+  add("Free school meals (FSM6)", p.fsm6.toFixed(1) + "% (England " + p.fsm6_england.toFixed(1) + "%)");
+  add("English as additional language", p.eal.toFixed(1) + "%");
+  add("SEN support / EHCP", p.sen_support.toFixed(1) + "% / " + p.ehcp.toFixed(1) + "%");
+  add("Persistent absence", p.persistent_absence.toFixed(1) + "% (England " + p.persistent_absence_england.toFixed(1) + "%)");
+  t.appendChild(tb);
+  const at = document.createElement("div"); at.className = "sub"; at.style.marginTop = "6px"; at.textContent = p.attainment; t.appendChild(at);
+  if (popup) popup.remove();
+  popup = new mapboxgl.Popup({ maxWidth: "330px", focusAfterOpen: false }).setLngLat(f.geometry.coordinates).setDOMContent(t).addTo(map);
+}
+
+update();
+const tok = getToken();
+if (tok) startMap(tok); else askToken();
+</script>
+</body>
+</html>

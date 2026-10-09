@@ -54,6 +54,7 @@ h1 { font: 700 30px/1.02 var(--display); margin: 6px 0 0; text-wrap: balance; le
 label.ctl { display: block; font: 600 13px/1 var(--display); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
 select { width: 100%; font: 15px var(--body); padding: 9px 10px; border: 1px solid var(--rule); border-radius: 6px; background: var(--bg); color: var(--ink); }
 select:focus-visible, button:focus-visible, input:focus-visible, .row:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.plain { font-size: 14px; margin: 8px 0 0; }
 .note { font-size: 13px; color: var(--muted); margin: 6px 0 0; }
 
 .legend { display: flex; flex-direction: column; gap: 4px; }
@@ -152,7 +153,7 @@ select:focus-visible, button:focus-visible, input:focus-visible, .row:focus-visi
     <header>
       <p class="eyebrow">Corby · Pride in Place neighbourhood</p>
       <h1>Kingswood, Hazel Leys &amp; Exeter</h1>
-      <p class="lede">All nine neighbourhoods (LSOAs) in the Pride in Place area: Kingswood and Hazel Leys (007A–007G) and the Exeter estate (005B and 005C, including Burghley Drive). Darker always means more deprived.</p>
+      <p class="lede">All nine neighbourhoods in the Pride in Place area (each an LSOA, a small statistical area of roughly 1,500 people): Kingswood and Hazel Leys (007A–007G) and the Exeter estate (005B and 005C, including Burghley Drive). Darker always means more deprived.</p>
     </header>
 
     <div class="facts" aria-label="Neighbourhood summary">
@@ -165,6 +166,7 @@ select:focus-visible, button:focus-visible, input:focus-visible, .row:focus-visi
     <div>
       <label class="ctl" for="ind">Show on map</label>
       <select id="ind"></select>
+      <p class="plain" id="ind-plain"></p>
       <p class="note" id="ind-note"></p>
     </div>
 
@@ -251,28 +253,28 @@ const PCT_COLOURS = ["#f8dfc8", "#f2ad7f", "#e5785c", "#c9485a", "#8a2160"]; // 
 
 const IND = [
   { group: "Indices of Deprivation 2025 (rank of 33,755)", items: [
-    { key: "imd_rank", name: "IMD 2025 — overall", type: "rank" },
-    { key: "income", name: "Income", type: "rank" },
-    { key: "employment", name: "Employment", type: "rank" },
-    { key: "education", name: "Education, skills & training", type: "rank" },
-    { key: "health", name: "Health & disability", type: "rank" },
-    { key: "crime", name: "Crime", type: "rank" },
-    { key: "barriers", name: "Barriers to housing & services", type: "rank" },
-    { key: "living_env", name: "Living environment", type: "rank" },
-    { key: "idaci", name: "Children in income-deprived families (IDACI)", type: "rank" },
-    { key: "idaopi", name: "Older people in income deprivation (IDAOPI)", type: "rank" },
+    { key: "imd_rank", name: "IMD 2025 — overall", type: "rank", plain: "The government's overall score for how deprived a neighbourhood is, combining income, jobs, health, education, crime, housing and living environment. Every neighbourhood in England is ranked; 1 is the most deprived of 33,755." },
+    { key: "income", name: "Income", type: "rank", plain: "How many people live on a low income, including those claiming benefits and tax credits. A low rank means more people are struggling financially." },
+    { key: "employment", name: "Employment", type: "rank", plain: "How many working-age people are out of work because of unemployment, sickness, disability or caring. A low rank means fewer people are in work." },
+    { key: "education", name: "Education, skills & training", type: "rank", plain: "How well children do at school and how many adults have few or no qualifications. A low rank means poorer results and skills." },
+    { key: "health", name: "Health & disability", type: "rank", plain: "How likely people are to die young or to have poor health or a disability that limits daily life. A low rank means worse health." },
+    { key: "crime", name: "Crime", type: "rank", plain: "The risk of being a victim of crime locally (violence, burglary, theft and criminal damage). A low rank means more crime." },
+    { key: "barriers", name: "Barriers to housing & services", type: "rank", plain: "How hard it is to get decent housing and reach local services. It covers overcrowding, homelessness, affordability and distance to shops, GPs and schools." },
+    { key: "living_env", name: "Living environment", type: "rank", plain: "The quality of homes and surroundings: housing condition, air quality and road traffic accidents. A low rank means poorer conditions." },
+    { key: "idaci", name: "Children in income-deprived families (IDACI)", type: "rank", plain: "The share of children aged 0-15 living in families on a low income. A low rank means more children in poverty." },
+    { key: "idaopi", name: "Older people in income deprivation (IDAOPI)", type: "rank", plain: "The share of people aged 60 and over living on a low income. A low rank means more older people in poverty." },
   ]},
   { group: "Census 2021 and claimant count (%)", items: [
-    { key: "claimant_rate", name: "Claimant rate, July 2026 (% of 16–64)", type: "pct", cmp: [6.2, 3.3, 4.0], approxArea: true },
-    { key: "hh_deprived_3plus", name: "Households deprived in 3+ dimensions", type: "pct", cmp: [8.3, 3.5, 3.9] },
-    { key: "no_quals", name: "No qualifications (16+)", type: "pct", cmp: [31.6, 19.9, 18.1] },
-    { key: "level4_quals", name: "Degree-level (Level 4+) qualifications", type: "pct", cmp: [16.3, 26.7, 33.9], higherBetter: true },
-    { key: "social_rented", name: "Social rented households", type: "pct", cmp: [30.2, 15.2, 17.1] },
-    { key: "private_rented", name: "Private rented households", type: "pct", cmp: [24.2, 18.4, 20.5] },
-    { key: "no_car", name: "Households with no car or van", type: "pct", cmp: [31.6, 16.0, 23.5] },
-    { key: "disabled", name: "Disabled under the Equality Act", type: "pct", cmp: [19.9, 17.3, 17.3] },
-    { key: "lone_parent", name: "Lone parents with dependent children", type: "pct", cmp: [11.1, 7.0, 6.9] },
-    { key: "language_not_english", name: "Main language not English (3+)", type: "pct", cmp: [22.1, 9.4, 9.2] },
+    { key: "claimant_rate", name: "Claimant rate, July 2026 (% of 16–64)", type: "pct", plain: "The share of people aged 16-64 claiming Universal Credit or Jobseeker's Allowance because they are out of work or on a low income, in July 2026. Higher means more people need this support.", cmp: [6.2, 3.3, 4.0], approxArea: true },
+    { key: "hh_deprived_3plus", name: "Households deprived in 3+ dimensions", type: "pct", plain: "Homes that are disadvantaged in three or more of four ways: no one in work or in full-time education, low qualifications, poor health or disability, and overcrowded or poor housing. Higher is worse.", cmp: [8.3, 3.5, 3.9] },
+    { key: "no_quals", name: "No qualifications (16+)", type: "pct", plain: "The share of adults aged 16 and over with no formal qualifications of any kind. Higher is worse.", cmp: [31.6, 19.9, 18.1] },
+    { key: "level4_quals", name: "Degree-level (Level 4+) qualifications", type: "pct", plain: "The share of adults aged 16 and over with a degree, HND or similar qualification. Here a lower share shows darker, because fewer degree-level qualifications goes with more deprivation.", cmp: [16.3, 26.7, 33.9], higherBetter: true },
+    { key: "social_rented", name: "Social rented households", type: "pct", plain: "The share of homes rented from the council or a housing association. This is not good or bad in itself, but it shows where social housing is concentrated.", cmp: [30.2, 15.2, 17.1] },
+    { key: "private_rented", name: "Private rented households", type: "pct", plain: "The share of homes rented from a private landlord or letting agent. Not good or bad in itself; it shows the housing mix.", cmp: [24.2, 18.4, 20.5] },
+    { key: "no_car", name: "Households with no car or van", type: "pct", plain: "The share of homes with no car or van, which can make work, shops and appointments harder to reach. Higher means more people rely on buses, walking or lifts.", cmp: [31.6, 16.0, 23.5] },
+    { key: "disabled", name: "Disabled under the Equality Act", type: "pct", plain: "The share of people whose health problem or disability limits their day-to-day activities, as defined by the Equality Act 2010.", cmp: [19.9, 17.3, 17.3] },
+    { key: "lone_parent", name: "Lone parents with dependent children", type: "pct", plain: "The share of households that are one parent living with dependent children. Higher means more single-parent families.", cmp: [11.1, 7.0, 6.9] },
+    { key: "language_not_english", name: "Main language not English (3+)", type: "pct", plain: "The share of people aged 3 and over whose main language is not English. It helps show where translated information may be needed.", cmp: [22.1, 9.4, 9.2] },
   ]},
 ];
 const ALL = IND.flatMap(g => g.items);
@@ -374,6 +376,7 @@ function renderList(ind) {
 
 function update() {
   const ind = byKey[current];
+  document.getElementById("ind-plain").textContent = ind.plain;
   renderLegend(ind); renderList(ind);
   try { localStorage.setItem("pip_ind", current); } catch (e) {}
   if (map && map.isStyleLoaded() && map.getSource("areas")) applyStyle();
@@ -558,10 +561,10 @@ function schoolPopup(f) {
   const tb = document.createElement("table");
   const add = (k, v) => { const tr = tb.insertRow(); tr.insertCell().textContent = k; tr.insertCell().textContent = v; };
   add("Pupils", fmt(p.pupils));
-  add("Free school meals (FSM6)", p.fsm6.toFixed(1) + "% (England " + p.fsm6_england.toFixed(1) + "%)");
-  add("English as additional language", p.eal.toFixed(1) + "%");
-  add("SEN support / EHCP", p.sen_support.toFixed(1) + "% / " + p.ehcp.toFixed(1) + "%");
-  add("Persistent absence", p.persistent_absence.toFixed(1) + "% (England " + p.persistent_absence_england.toFixed(1) + "%)");
+  add("Pupils eligible for free school meals (at any time in the last 6 years)", p.fsm6.toFixed(1) + "% (England " + p.fsm6_england.toFixed(1) + "%)");
+  add("Pupils whose first language is not English", p.eal.toFixed(1) + "%");
+  add("Pupils with special educational needs: extra school support / formal plan (EHCP)", p.sen_support.toFixed(1) + "% / " + p.ehcp.toFixed(1) + "%");
+  add("Pupils missing 10% or more of school", p.persistent_absence.toFixed(1) + "% (England " + p.persistent_absence_england.toFixed(1) + "%)");
   t.appendChild(tb);
   const at = document.createElement("div"); at.className = "sub"; at.style.marginTop = "6px"; at.textContent = p.attainment; t.appendChild(at);
   if (popup) popup.remove();

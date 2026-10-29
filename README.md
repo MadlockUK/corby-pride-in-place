@@ -26,6 +26,7 @@ The page's data (all 37 LSOAs, the Pride in Place boundary, wards and schools) i
 | Carer's Allowance, % of residents 16+ | DWP Stat-Xplore (CA_Entitled_New) | March 2026 |
 | Children in low-income families (relative, before housing costs), % of under-16s | DWP Stat-Xplore (CILIF_REL), LSOA level | 2024/25 (trend from 2021/22) |
 | Households in fuel poverty (Low Income Low Energy Efficiency measure), % of households | DESNZ Sub-regional fuel poverty data 2026, Table 4 (LSOA) | 2024 |
+| Homes rated D or below, and E to G, for energy efficiency (EPCs), % of homes with a certificate; heating fuel | MHCLG Get energy performance of buildings data (domestic EPC register) | Certificates lodged 2008 to Oct 2026 |
 | Claimant rate (refreshed for all 37) | ONS/DWP claimant count via Nomis | September 2026 |
 
 For the 28 LSOAs outside the Pride in Place boundary, IMD 2025 ranks come from MHCLG File 7 and Census figures from Nomis, worked out the same way as the data pack. The method reproduces the pack's figures exactly for all nine Pride in Place LSOAs. Wards are the parish wards in the North Northamptonshire (Electoral Changes) Order 2024 (SI 2024/157), drawn as the May 2025 council wards clipped to Corby parish. Six LSOAs straddle a ward line and are listed under the ward that holds most of their output areas.
@@ -54,6 +55,7 @@ If a source is down or refuses a request from the page, that layer shows an erro
 - Town council area and wards: ONS Parishes Dec 2025 (BGC), Wards May 2025 (BGC), OA21 to ward and parish lookups (OGL v3.0)
 - DWP Stat-Xplore: Universal Credit, Personal Independence Payment, Pension Credit, Attendance Allowance, Carer's Allowance and Children in Low Income Families by LSOA (Crown copyright, OGL v3.0). Shares use Census 2021 age groups (TS007B) as the base, so they are a guide rather than official rates; DWP applies small random adjustments to small-area counts
 - Fuel poverty: Department for Energy Security and Net Zero, [Sub-regional fuel poverty data 2026 (2024 data)](https://www.gov.uk/government/statistics/sub-regional-fuel-poverty-data-2026-2024-data), LSOA table, with North Northants and England from the same release (OGL v3.0). Modelled estimates: DESNZ advises using them to spot areas of high or low fuel poverty, not to track one LSOA over time. Pride in Place and Corby town figures add up the LSOA estimates
+- Energy ratings (EPCs): Ministry of Housing, Communities and Local Government, [Get energy performance of buildings data](https://get-energy-performance-data.communities.gov.uk/), domestic certificates full-load CSV (regenerated 13 Oct 2026; OGL v3.0). Latest certificate per property (by UPRN, or by address where there is none), placed in an LSOA through its postcode (postcodes.io, 2021 LSOAs). Rates are of homes that have a certificate, not of all homes: only homes sold, let or improved since 2008, and new builds, have one; ratings can be years old; coverage varies by tenure. North Northants and England use the same method on every certificate in the file. Pride in Place and Corby town figures add up the LSOA counts.
 - Crime by LSOA: data.police.uk (Home Office, OGL v3.0)
 - Street faults: North Northamptonshire Council FixMyStreet Pro (public Open311 feed). Residents' reports, not checked faults; highways categories only
 - Live layers: data.police.uk (Home Office, OGL v3); Anglian Water Services storm overflow data (CC BY 4.0); Planning Data Platform (OGL v3); postcodes.io (ONS Postcode Directory, OGL)
@@ -74,6 +76,8 @@ Every data set on the map is explained in plain English: each indicator has a sh
 - **Carer's Allowance**: a benefit for people on a low income who care for someone at least 35 hours a week.
 - **Children in low-income families**: children in families with income below 60% of the national average, before housing costs (the government's main local child poverty measure).
 - **Fuel poverty**: in England, a household is fuel poor if its home has an energy efficiency rating of band D or below and paying for energy leaves it with an income below the poverty line (the Low Income Low Energy Efficiency, or LILEE, measure).
+- **EPC** (Energy Performance Certificate): a certificate that rates a home's energy efficiency from A (cheapest to heat) to G (most expensive). Homes need one when they are sold, let or built, and many get one after improvements.
+- **Energy efficiency bands A to G**: A and B are the most efficient; C is in the middle; D to G are less efficient, and E, F and G are the worst. Band D or below is the line used for fuel poverty.
 - **Universal Credit**: the main means-tested benefit for working-age people, in or out of work.
 - **PIP** (Personal Independence Payment): a benefit for the extra costs of long-term illness or disability.
 - **ASB** (anti-social behaviour): nuisance, rowdy or intimidating behaviour reported to the police. It is counted separately from crime.

@@ -107,13 +107,17 @@ select:focus-visible, button:focus-visible, input:focus-visible, .row:focus-visi
 .lbl.dark.adj { color: #ffd766; }
 
 .mapboxgl-popup-content { font: 13.5px/1.4 var(--body); color: #1d232b; padding: 12px 14px; border-radius: 8px; max-width: 320px; }
-.pop { max-height: min(56vh, 440px); overflow-y: auto; padding-right: 4px; }
+.mapboxgl-popup { z-index: 3; }
+.pop { max-height: min(56vh, 440px); overflow-y: auto; overflow-x: hidden; padding-right: 4px; }
 .pop h3 { font: 700 19px/1.05 "Barlow Condensed", "Arial Narrow", sans-serif; margin: 0 0 2px; }
 .pop .sub { color: #5b6470; font-size: 12px; margin-bottom: 8px; }
 .pop .flag { background: #fff3cf; border-left: 3px solid #c99400; padding: 5px 8px; font-size: 12px; margin-bottom: 8px; }
-.pop table { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nums; }
-.pop td { padding: 2px 0; border-bottom: 1px solid #eceee9; font-size: 12.5px; }
-.pop td:last-child { text-align: right; white-space: nowrap; padding-left: 10px; }
+.pop table { border-collapse: collapse; width: 100%; table-layout: fixed; font-variant-numeric: tabular-nums; }
+.pop td { padding: 3px 0; border-bottom: 1px solid #eceee9; font-size: 12.5px; vertical-align: top; overflow-wrap: anywhere; }
+.pop td:last-child { text-align: right; padding-left: 10px; }
+.pop .grp td { text-align: left; padding-left: 0; }
+.pop .more { font-size: 12px; color: #5b6470; margin-top: 6px; }
+.pop .more b { color: #1d232b; }
 .pop tr.hi td { font-weight: 700; }
 .pop .grp td { color: #5b6470; font-size: 11px; text-transform: uppercase; letter-spacing: .06em; padding-top: 8px; border-bottom: 0; }
 
@@ -593,7 +597,7 @@ function openPopup(code, lngLat) {
   const sub = document.createElement("div"); sub.className = "sub"; sub.textContent = p.name + " · " + p.code + " · " + p.area_km2.toFixed(2) + " km² · " + p.ward + " ward" + (p.ward_note ? " (split: " + p.ward_note + " output areas)" : ""); t.appendChild(sub);
   if (!p.pip) { const fl = document.createElement("div"); fl.className = "flag"; fl.textContent = "Outside the Pride in Place boundary: shown for comparison with the rest of Corby."; t.appendChild(fl); }
   if (p.exeter) { const fl = document.createElement("div"); fl.className = "flag"; fl.textContent = "Exeter estate: inside this Pride in Place boundary but outside the published MSOA E02005617 (it sits in E02005616). Census figures added from Nomis, Oct 2026" + (p.code === "E01026950" ? "; IMD ranks from the MHCLG Local Deprivation Explorer." : "."); t.appendChild(fl); }
-  const tb = document.createElement("table");
+  const tb = document.createElement("table"); tb.innerHTML = '<colgroup><col style="width:58%"><col></colgroup>';
   const add = (k, v, hi) => { const tr = tb.insertRow(); if (hi) tr.className = "hi"; tr.insertCell().textContent = k; tr.insertCell().textContent = v; };
   const grp = k => { const tr = tb.insertRow(); tr.className = "grp"; const c = tr.insertCell(); c.colSpan = 2; c.textContent = k; };
   grp("Deprivation rank in England (1 = most deprived) · share of areas more deprived");
@@ -610,8 +614,8 @@ function openPopup(code, lngLat) {
   add("Crimes / anti-social behaviour incidents (12 months)", fmt(p.crime_count) + " / " + fmt(p.asb_count), false);
   add("Of which violence and sexual offences", fmt(p.violence_count), false);
   add("Street faults reported / potholes / still open", fmt(p.fms_count) + " / " + fmt(p.fms_potholes) + " / " + fmt(p.fms_open), false);
-  if (p.fms_top) add("Most reported", p.fms_top, false);
   t.appendChild(tb);
+  if (p.fms_top) { const mr = document.createElement("div"); mr.className = "more"; mr.innerHTML = "<b>Most reported street faults:</b> "; mr.append(p.fms_top); t.appendChild(mr); }
   if (popup) popup.remove();
   popup = new mapboxgl.Popup({ maxWidth: "330px", focusAfterOpen: false }).setLngLat(lngLat).setDOMContent(t).addTo(map);
 }

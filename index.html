@@ -116,6 +116,8 @@ select:focus-visible, button:focus-visible, input:focus-visible, .row:focus-visi
 .pop td { padding: 3px 0; border-bottom: 1px solid #eceee9; font-size: 12.5px; vertical-align: top; overflow-wrap: anywhere; }
 .pop td:last-child { text-align: right; padding-left: 10px; }
 .pop .grp td { text-align: left; padding-left: 0; }
+.pop:not(.all) .gx { display: none; }
+.pop .showall { margin: 6px 0 2px; padding: 6px 10px; font: inherit; font-size: 12px; color: #1f4f9a; background: #eef3fb; border: 1px solid #c5d4ec; border-radius: 6px; cursor: pointer; }
 .pop .more { font-size: 12px; color: #5b6470; margin-top: 6px; }
 .pop .more b { color: #1d232b; }
 .pop tr.hi td { font-weight: 700; }
@@ -667,8 +669,9 @@ function openPopup(code, lngLat) {
   if (!p.pip) { const fl = document.createElement("div"); fl.className = "flag"; fl.textContent = "Outside the Pride in Place boundary: shown for comparison with the rest of Corby."; t.appendChild(fl); }
   if (p.exeter) { const fl = document.createElement("div"); fl.className = "flag"; fl.textContent = "Exeter estate: inside this Pride in Place boundary but outside the published MSOA E02005617 (it sits in E02005616). Census figures added from Nomis, Oct 2026" + (p.code === "E01026950" ? "; IMD ranks from the MHCLG Local Deprivation Explorer." : "."); t.appendChild(fl); }
   const tb = document.createElement("table"); tb.innerHTML = '<colgroup><col style="width:58%"><col></colgroup>';
-  const add = (k, v, hi) => { const tr = tb.insertRow(); if (hi) tr.className = "hi"; tr.insertCell().textContent = k; tr.insertCell().textContent = v; };
-  const grp = k => { const tr = tb.insertRow(); tr.className = "grp"; const c = tr.insertCell(); c.colSpan = 2; c.textContent = k; };
+  let gi = -1;
+  const add = (k, v, hi) => { const tr = tb.insertRow(); if (hi) tr.className = "hi"; tr.dataset.g = gi; tr.insertCell().textContent = k; tr.insertCell().textContent = v; };
+  const grp = k => { gi++; const tr = tb.insertRow(); tr.className = "grp"; tr.dataset.g = gi; const c = tr.insertCell(); c.colSpan = 2; c.textContent = k; };
   grp("Deprivation rank in England (1 = most deprived) · share of areas more deprived");
   IND[0].items.forEach(i => add(i.name.replace(/ \(.*\)/, "").replace("Overall deprivation (IMD 2025)", "Overall deprivation"), rankCell(p[i.key]), i.key === current));
   add("Rank in North Northants (of 205)", fmt(p.la_rank), false);
@@ -719,7 +722,21 @@ function openPopup(code, lngLat) {
   add("Average private rent, whole North Northants council area, " + DATA.metadata.months.rent + " (not available for neighbourhoods)", "£" + fmt(rn.rent) + " a month (England £" + fmt(rn.england_rent) + "); 1 bed £" + fmt(rn.one) + ", 2 bed £" + fmt(rn.two) + ", 3 bed £" + fmt(rn.three), false);
   add("Change in private rents over the last year, North Northants / England", "+" + rn.annual.toFixed(1) + "% / +" + rn.england_annual.toFixed(1) + "%", false);
   t.appendChild(tb);
-  if (p.fms_top) { const mr = document.createElement("div"); mr.className = "more"; mr.innerHTML = "<b>Most reported street faults:</b> "; mr.append(p.fms_top); t.appendChild(mr); }
+  let mr = null;
+  if (p.fms_top) { mr = document.createElement("div"); mr.className = "more"; mr.innerHTML = "<b>Most reported street faults:</b> "; mr.append(p.fms_top); t.appendChild(mr); }
+  // Show only the group holding the selected indicator; the rest sit behind a button.
+  const hiRow = tb.querySelector("tr.hi");
+  if (hiRow) {
+    const keep = hiRow.dataset.g, hidden = [...tb.rows].filter(r => r.dataset.g !== keep);
+    const isFaults = current === "fms_rate";
+    if (mr && !isFaults) hidden.push(mr);
+    hidden.forEach(r => r.classList.add("gx"));
+    const btn = document.createElement("button"); btn.type = "button"; btn.className = "showall";
+    const closed = "Show all data for this neighbourhood", open = "Show only the selected data";
+    btn.textContent = closed;
+    btn.addEventListener("click", () => { const on = t.classList.toggle("all"); btn.textContent = on ? open : closed; });
+    t.insertBefore(btn, tb);
+  }
   showPopup(t, lngLat);
 }
 

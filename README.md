@@ -37,6 +37,7 @@ The page's data (all 37 LSOAs, the Pride in Place boundary, wards and schools) i
 | Food businesses with the top hygiene rating (5), % of rated businesses; takeaways and sandwich shops per 1,000 residents | Food Standards Agency Food Hygiene Rating Scheme API (v2) | Ratings published to 30 Oct 2026 |
 | Median house price paid, with sales and new-build share | HM Land Registry Price Paid Data (linked data endpoint) | Sales Nov 2023 to Sep 2026 |
 | Average private rent and annual change (council area only) | ONS Price Index of Private Rents, 21 Oct 2026 release | September 2026 |
+| Schools: pupils, free school meals, first language, SEN, absence, attainment, for all 26 schools in or serving Corby | DfE Explore Education Statistics and GIAS | School year 2024/25 |
 | Claimant rate (refreshed for all 37) | ONS/DWP claimant count via Nomis | September 2026 |
 
 For the 28 LSOAs outside the Pride in Place boundary, IMD 2025 ranks come from MHCLG File 7 and Census figures from Nomis, worked out the same way as the data pack. The method reproduces the pack's figures exactly for all nine Pride in Place LSOAs. Wards are the parish wards in the North Northamptonshire (Electoral Changes) Order 2024 (SI 2024/157), drawn as the May 2025 council wards clipped to Corby parish. Six LSOAs straddle a ward line and are listed under the ward that holds most of their output areas.
@@ -61,7 +62,7 @@ If a source is down or refuses a request from the page, that layer shows an erro
 - ONS Open Geography Portal boundaries (LSOA Dec 2021 BGC V5, MSOA Dec 2021 BGC V3). Contains OS data © Crown copyright and database right 2021. Source: Office for National Statistics licensed under the [Open Government Licence v3.0](https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/).
 - English Indices of Deprivation 2025 (MHCLG)
 - Census 2021 and claimant count (ONS via Nomis)
-- DfE school data 2024/25 (school locations approximate)
+- Schools: DfE school data 2024/25, for all open schools in or serving Corby (26): Get Information about Schools register (GIAS) for the list; Explore Education Statistics for pupils and free school meals (Schools, pupils and their characteristics), SEN support and EHC plans (Special educational needs in England), absence (Pupil absence in schools in England), and KS2 / KS4 attainment (OGL v3.0). Locations are postcode centroids (approximate). England comparisons are for state-funded schools of the same phase from the same files. Free school meals = pupils known to be eligible on census day, which replaces the earlier FSM6 figure for the original four schools.
 - Town council area and wards: ONS Parishes Dec 2025 (BGC), Wards May 2025 (BGC), OA21 to ward and parish lookups (OGL v3.0)
 - DWP Stat-Xplore: Universal Credit, Personal Independence Payment, Pension Credit, Attendance Allowance, Carer's Allowance and Children in Low Income Families by LSOA (Crown copyright, OGL v3.0). Shares use Census 2021 age groups (TS007B) as the base, so they are a guide rather than official rates; DWP applies small random adjustments to small-area counts
 - Fuel poverty: Department for Energy Security and Net Zero, [Sub-regional fuel poverty data 2026 (2024 data)](https://www.gov.uk/government/statistics/sub-regional-fuel-poverty-data-2026-2024-data), LSOA table, with North Northants and England from the same release (OGL v3.0). Modelled estimates: DESNZ advises using them to spot areas of high or low fuel poverty, not to track one LSOA over time. Pride in Place and Corby town figures add up the LSOA estimates
@@ -109,6 +110,9 @@ Every data set on the map is explained in plain English: each indicator has a sh
 - **Median house price**: the middle price of all homes sold in the period (half sold for more, half for less). It is less thrown off by a few very expensive sales than an average.
 - **Price Paid Data**: HM Land Registry's record of every home sale in England and Wales.
 - **PIPR** (Price Index of Private Rents): the ONS measure of what private tenants pay in rent, for new and existing tenancies.
+- **Persistent absence**: a pupil who misses 10% or more of school sessions (about half a day a week) for any reason.
+- **SEN support / EHC plan**: extra help for children with special educational needs. An Education, Health and Care (EHC) plan is the formal legal plan for children who need the most support.
+- **Attainment 8 / KS2 expected standard**: Attainment 8 is the average GCSE-type score per pupil (England average about 46); the Key Stage 2 expected standard is the share of Year 6 pupils reaching the expected level in reading, writing and maths.
 - **Universal Credit**: the main means-tested benefit for working-age people, in or out of work.
 - **PIP** (Personal Independence Payment): a benefit for the extra costs of long-term illness or disability.
 - **ASB** (anti-social behaviour): nuisance, rowdy or intimidating behaviour reported to the police. It is counted separately from crime.
